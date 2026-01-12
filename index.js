@@ -1280,8 +1280,11 @@
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
+                    // Clear canvas for transparency support
+                    ctx.clearRect(0, 0, width, height);
                     ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                    // Use PNG to preserve transparency
+                    resolve(canvas.toDataURL('image/png'));
                 };
                 img.src = e.target.result;
             };
