@@ -225,6 +225,25 @@
             selectedCSSPreset: "Default",
             cssPresets: {},
 
+            // Prompt Library
+            promptLibrary: {
+                "Default Hype Bot": {
+                    mainPrompt: DEFAULTS.MAIN_PROMPT,
+                    prefill: DEFAULTS.PREFILL,
+                    description: "The default cheerleader prompt"
+                },
+                "Sarcastic Commentator": {
+                    mainPrompt: "You are a sarcastic commentator. Make a short, witty, slightly snarky comment on the current story. Keep it brief (1-2 sentences). Be funny but not mean.",
+                    prefill: "Oh, how interesting...",
+                    description: "A sarcastic take on the roleplay"
+                },
+                "Dramatic Narrator": {
+                    mainPrompt: "You are a dramatic narrator. Make a short, theatrical comment on the current story as if narrating an epic tale. Keep it brief (1-2 sentences). Be dramatic and cinematic.",
+                    prefill: "And so it came to pass...",
+                    description: "Epic dramatic narration style"
+                }
+            },
+
             // Presets
             presets: {
                 "Default": {
@@ -276,6 +295,9 @@
         if (settings.autoDismissSeconds === undefined) settings.autoDismissSeconds = DEFAULTS.AUTO_DISMISS;
         if (settings.outputPosition === undefined) settings.outputPosition = DEFAULTS.OUTPUT_POSITION;
         if (settings.keyboardShortcutEnabled === undefined) settings.keyboardShortcutEnabled = DEFAULTS.KEYBOARD_SHORTCUT;
+        if (!settings.promptLibrary) {
+            settings.promptLibrary = getDefaultSettings().promptLibrary;
+        }
 
         State.cache = settings;
         return settings;
@@ -787,6 +809,7 @@
         // Personas
         updatePersonaDropdown();
         updatePresetDropdown();
+        updatePromptLibraryDropdown();
     }
 
     function updatePersonaDropdown() {
@@ -813,6 +836,189 @@
 
         $select.val(s.activePreset || "Default");
         $('#cheerleader-delete-preset').prop('disabled', s.activePreset === "Default");
+    }
+
+    function updatePromptLibraryDropdown() {
+        const s = getSettings();
+        const $select = $('#cheerleader-prompt-library-select').empty();
+
+        if (s.promptLibrary) {
+            Object.keys(s.promptLibrary).sort().forEach(name => {
+                $select.append($('<option>', { value: name, text: name }));
+            });
+        }
+
+        // Update preview
+        updatePromptPreview();
+    }
+
+    function updatePromptPreview() {
+        const s = getSettings();
+        const name = $('#cheerleader-prompt-library-select').val();
+        const $preview = $('#cheerleader-prompt-preview');
+
+        if (name && s.promptLibrary?.[name]) {
+            const prompt = s.promptLibrary[name];
+            let html = '';
+            if (prompt.description) {
+                html += `<div class="cheerleader-prompt-preview-desc">${prompt.description}</div>`;
+            }
+            html += `<div class="cheerleader-prompt-preview-label">Main Prompt:</div>`;
+            html += `<div class="cheerleader-prompt-preview-text">${prompt.mainPrompt || '(empty)'}</div>`;
+            if (prompt.prefill) {
+                html += `<div class="cheerleader-prompt-preview-label" style="margin-top:8px">Prefill:</div>`;
+                html += `<div class="cheerleader-prompt-preview-text">${prompt.prefill}</div>`;
+            }
+            $preview.html(html).addClass('visible');
+        } else {
+            $preview.removeClass('visible');
+        }
+    }
+
+    function showPromptEditorPopup(editName = null) {
+        const s = getSettings();
+        const isEdit = editName !== null;
+        const existingPrompt = isEdit ? s.promptLibrary?.[editName] : null;
+
+        const html = `
+            <div id="cheerleader-prompt-editor-overlay"></div>
+            <div id="cheerleader-prompt-editor-popup">
+                <div class="cheerleader-editor-header">
+                    <h3>${isEdit ? 'Edit' : 'New'} Prompt Template</h3>
+                    <span id="close-prompt-editor">✕</span>
+                </div>
+                <div class="cheerleader-editor-section">
+                    <label>Template Name</label>
+                    <input id="prompt-editor-name" class="text_pole" type="text" value="${isEdit ? editName : ''}" placeholder="My Custom Prompt" ${isEdit ? 'readonly style="opacity:0.7"' : ''}>
+                </div>
+                <div class="cheerleader-editor-section">
+                    <label>Description (optional)</label>
+                    <input id="prompt-editor-description" class="text_pole" type="text" value="${existingPrompt?.description || ''}" placeholder="Brief description of this prompt style">
+                </div>
+                <div class="cheerleader-editor-section">
+                    <label>Main Prompt</label>
+                    <textarea id="prompt-editor-main" class="text_pole" rows="6" placeholder="You are a hype-bot...">${existingPrompt?.mainPrompt || ''}</textarea>
+                </div>
+                <div class="cheerleader-editor-section">
+                    <label>Prefill (optional)</label>
+                    <textarea id="prompt-editor-prefill" class="text_pole" rows="2" placeholder="Starting text for AI response">${existingPrompt?.prefill || ''}</textarea>
+                </div>
+                <div class="cheerleader-editor-actions">
+                    <button id="prompt-editor-cancel" class="menu_button">Cancel</button>
+                    <button id="prompt-editor-save" class="menu_button menu_button_icon"><i class="fa-solid fa-save"></i> Save</button>
+                </div>
+            </div>
+        `;
+
+        $('body').append(html);
+
+        // Focus the name field for new prompts
+        if (!isEdit) {
+            $('#prompt-editor-name').focus();
+        }
+
+        // Bind events
+        const closePopup = () => {
+            $('#cheerleader-prompt-editor-popup, #cheerleader-prompt-editor-overlay').remove();
+        };
+
+        $('#close-prompt-editor, #prompt-editor-cancel, #cheerleader-prompt-editor-overlay').on('click', closePopup);
+
+        $('#prompt-editor-save').on('click', () => {
+            const name = $('#prompt-editor-name').val().trim();
+            const mainPrompt = $('#prompt-editor-main').val().trim();
+            const prefill = $('#prompt-editor-prefill').val().trim();
+            const description = $('#prompt-editor-description').val().trim();
+
+            if (!name) {
+                toastr.error('Please enter a template name');
+                return;
+            }
+
+            if (!mainPrompt) {
+                toastr.error('Please enter a main prompt');
+                return;
+            }
+
+            // Check for duplicate name (only for new prompts)
+            if (!isEdit && s.promptLibrary?.[name]) {
+                toastr.error('A prompt with this name already exists');
+                return;
+            }
+
+            s.promptLibrary = s.promptLibrary || {};
+            s.promptLibrary[name] = {
+                mainPrompt: mainPrompt,
+                prefill: prefill,
+                description: description
+            };
+
+            saveSettings();
+            updatePromptLibraryDropdown();
+            $('#cheerleader-prompt-library-select').val(name);
+            updatePromptPreview();
+
+            toastr.success(isEdit ? 'Prompt updated!' : 'Prompt saved to library!');
+            closePopup();
+        });
+
+        // Handle Enter key in name field
+        $('#prompt-editor-name').on('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                $('#prompt-editor-main').focus();
+            }
+        });
+    }
+
+    function loadPromptFromLibrary(name) {
+        const s = getSettings();
+        const prompt = s.promptLibrary?.[name];
+        if (!prompt) return;
+
+        const persona = getActivePersona();
+        persona.mainPrompt = prompt.mainPrompt;
+        if (prompt.prefill) {
+            persona.prefill = prompt.prefill;
+        }
+
+        saveSettings();
+        updateUI();
+        toastr.success(`Loaded prompt: ${name}`);
+    }
+
+    function deletePromptFromLibrary(name) {
+        if (!confirm(`Delete prompt template: ${name}?`)) return;
+
+        const s = getSettings();
+        delete s.promptLibrary?.[name];
+        saveSettings();
+        updatePromptLibraryDropdown();
+        toastr.success('Prompt deleted');
+    }
+
+    function saveCurrentPromptToLibrary() {
+        const persona = getActivePersona();
+        const name = prompt('Save prompt as:', persona.name + ' Prompt');
+        if (!name) return;
+
+        const s = getSettings();
+        if (s.promptLibrary?.[name]) {
+            if (!confirm(`Overwrite existing prompt "${name}"?`)) return;
+        }
+
+        s.promptLibrary = s.promptLibrary || {};
+        s.promptLibrary[name] = {
+            mainPrompt: persona.mainPrompt || DEFAULTS.MAIN_PROMPT,
+            prefill: persona.prefill || '',
+            description: `Saved from ${persona.name}`
+        };
+
+        saveSettings();
+        updatePromptLibraryDropdown();
+        $('#cheerleader-prompt-library-select').val(name);
+        updatePromptPreview();
+        toastr.success(`Saved prompt: ${name}`);
     }
 
     function updateCooldownIndicator() {
@@ -1214,6 +1420,23 @@
         $doc.on('click', '#cheerleader-delete-preset', deleteCurrentPreset);
         $doc.on('click', '#cheerleader-factory-reset', resetToFactory);
 
+        // Prompt Library
+        $doc.on('change', '#cheerleader-prompt-library-select', updatePromptPreview);
+        $doc.on('click', '#cheerleader-prompt-load', () => {
+            const name = $('#cheerleader-prompt-library-select').val();
+            if (name) loadPromptFromLibrary(name);
+        });
+        $doc.on('click', '#cheerleader-prompt-edit', () => {
+            const name = $('#cheerleader-prompt-library-select').val();
+            if (name) showPromptEditorPopup(name);
+        });
+        $doc.on('click', '#cheerleader-prompt-delete', () => {
+            const name = $('#cheerleader-prompt-library-select').val();
+            if (name) deletePromptFromLibrary(name);
+        });
+        $doc.on('click', '#cheerleader-prompt-new', () => showPromptEditorPopup());
+        $doc.on('click', '#cheerleader-save-to-library', saveCurrentPromptToLibrary);
+
         // Export/Import
         $doc.on('click', '#cheerleader-export', exportSettings);
         $doc.on('click', '#cheerleader-import-btn', () => $('#cheerleader-import-file').click());
@@ -1501,6 +1724,9 @@
                                 <div class="cheerleader-section">
                                     <label>Main Prompt <span class="cheerleader-tooltip" title="System instructions for the hype bot">?</span></label>
                                     <textarea id="cheerleader-main-prompt" class="text_pole" rows="4" placeholder="You are a hype-bot..."></textarea>
+                                    <div class="cheerleader-row" style="justify-content:flex-end">
+                                        <button id="cheerleader-save-to-library" class="menu_button menu_button_icon" title="Save current prompt to library"><i class="fa-solid fa-bookmark"></i> Save to Library</button>
+                                    </div>
                                 </div>
 
                                 <div class="cheerleader-section">
@@ -1528,6 +1754,31 @@
                                         <button id="cheerleader-avatar-clear" class="menu_button" title="Clear Avatar"><i class="fa-solid fa-times"></i></button>
                                     </div>
                                     <input type="file" id="cheerleader-avatar-file" accept="image/*" style="display:none">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Prompt Library Drawer -->
+                    <div class="cheerleader-drawer">
+                        <div class="inline-drawer">
+                            <div class="inline-drawer-toggle inline-drawer-header">
+                                <b>Prompt Library</b>
+                                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+                            </div>
+                            <div class="inline-drawer-content">
+                                <div class="cheerleader-section">
+                                    <label>Saved Prompts <span class="cheerleader-tooltip" title="Your collection of reusable prompt templates">?</span></label>
+                                    <div class="cheerleader-row">
+                                        <select id="cheerleader-prompt-library-select" class="text_pole"></select>
+                                        <button id="cheerleader-prompt-load" class="menu_button" title="Load into Current Persona"><i class="fa-solid fa-download"></i></button>
+                                        <button id="cheerleader-prompt-edit" class="menu_button" title="Edit Prompt"><i class="fa-solid fa-pen"></i></button>
+                                        <button id="cheerleader-prompt-delete" class="menu_button" title="Delete Prompt"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                    <div id="cheerleader-prompt-preview" class="cheerleader-prompt-preview"></div>
+                                </div>
+                                <div class="cheerleader-section">
+                                    <button id="cheerleader-prompt-new" class="menu_button cheerleader-full-width"><i class="fa-solid fa-plus"></i> Create New Prompt Template</button>
                                 </div>
                             </div>
                         </div>
@@ -1709,6 +1960,40 @@
         .cheerleader-history-persona { color: gold; font-weight: bold; }
         .cheerleader-history-time { font-size: 0.8em; opacity: 0.7; }
         .cheerleader-history-text { font-style: italic; }
+
+        /* Prompt Library styles */
+        .cheerleader-prompt-preview {
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--SmartThemeBlurTintColor);
+            border: 1px solid var(--SmartThemeBorderColor);
+            border-radius: 6px;
+            font-size: 0.9em;
+            max-height: 150px;
+            overflow-y: auto;
+            display: none;
+        }
+        .cheerleader-prompt-preview.visible { display: block; }
+        .cheerleader-prompt-preview-label { font-weight: bold; color: var(--SmartThemeQuoteColor); margin-bottom: 4px; }
+        .cheerleader-prompt-preview-text { white-space: pre-wrap; word-break: break-word; }
+        .cheerleader-prompt-preview-desc { font-style: italic; color: var(--SmartThemeQuoteColor); margin-bottom: 8px; }
+
+        /* Prompt Editor Popup */
+        #cheerleader-prompt-editor-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; }
+        #cheerleader-prompt-editor-popup {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--SmartThemeBodyColor); border: 2px solid var(--SmartThemeBorderColor);
+            border-radius: 10px; padding: 20px; width: 90%; max-width: 600px; max-height: 80vh; z-index: 9999;
+            overflow-y: auto;
+        }
+        .cheerleader-editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .cheerleader-editor-header h3 { margin: 0; color: gold; }
+        #close-prompt-editor { cursor: pointer; font-size: 1.5em; opacity: 0.7; transition: opacity 0.2s; }
+        #close-prompt-editor:hover { opacity: 1; }
+        .cheerleader-editor-section { margin-bottom: 15px; }
+        .cheerleader-editor-section label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .cheerleader-editor-section input, .cheerleader-editor-section textarea { width: 100%; box-sizing: border-box; }
+        .cheerleader-editor-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
     </style>
     `;
 
