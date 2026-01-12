@@ -26,7 +26,36 @@
         STORE_SEND_COUNT: 4,
         AUTO_DISMISS: 0,
         OUTPUT_POSITION: "after_chat",
-        KEYBOARD_SHORTCUT: true
+        KEYBOARD_SHORTCUT: true,
+        PROMPT_TEMPLATE: `[
+  {
+    "role": "system",
+    "content": "{{main_prompt}}"
+  },
+  {
+    "role": "system", 
+    "content": "{{user_persona}}",
+    "enabled": "{{if_user_persona}}"
+  },
+  {
+    "role": "system",
+    "content": "{{char_info}}",
+    "enabled": "{{if_char_info}}"
+  },
+  {
+    "marker": "{{chat_history}}"
+  },
+  {
+    "role": "system",
+    "content": "{{previous_hype}}",
+    "enabled": "{{if_previous_hype}}"
+  },
+  {
+    "role": "assistant",
+    "content": "{{prefill}}",
+    "enabled": "{{if_prefill}}"
+  }
+]`
     });
 
     // Built-in CSS presets
@@ -208,7 +237,8 @@
                 prefill: DEFAULTS.PREFILL,
                 maxResponseTokens: DEFAULTS.MAX_RESPONSE,
                 maxContextTokens: DEFAULTS.MAX_CONTEXT,
-                avatarUrl: DEFAULTS.AVATAR
+                avatarUrl: DEFAULTS.AVATAR,
+                promptTemplate: DEFAULTS.PROMPT_TEMPLATE
             }],
 
             // Global settings
@@ -297,6 +327,15 @@
         if (settings.keyboardShortcutEnabled === undefined) settings.keyboardShortcutEnabled = DEFAULTS.KEYBOARD_SHORTCUT;
         if (!settings.promptLibrary) {
             settings.promptLibrary = getDefaultSettings().promptLibrary;
+        }
+        
+        // Ensure all personas have promptTemplate
+        if (settings.personas) {
+            settings.personas.forEach(p => {
+                if (!p.promptTemplate) {
+                    p.promptTemplate = DEFAULTS.PROMPT_TEMPLATE;
+                }
+            });
         }
 
         State.cache = settings;
@@ -613,6 +652,192 @@
         return null;
     }
 
+    /**
+     * Gathers all available data for template placeholders
+     * @returns {Object} Data object with all placeholder values
+     */
+    function gatherTemplateData() {
+        const ctx = getContext();
+        const settings = getSettings();
+        const persona = getActivePersona();
+        
+        const userName = ctx.name1 || 'User';
+        const charName = ctx.name2 || 'Character';
+        
+        // Main prompt
+        const mainPrompt = replaceMacros(persona.mainPrompt || DEFAULTS.MAIN_PROMPT);
+        
+        // User persona
+        const userPersonaRaw = getUserPersona();
+        const userPersona = userPersonaRaw ? `[User Persona - ${userName}]\n${replaceMacros(userPersonaRaw)}` : '';
+        
+        // Character info
+        let charInfo = '';
+        const charId = ctx.characterId;
+        if (charId !== undefined && ctx.characters?.[charId]) {
+            const char = ctx.characters[charId];
+            charInfo = `[Character - ${charName}]\n`;
+            charInfo += `Name: ${char.name}\n`;
+            if (char.description) {
+                charInfo += `Description: ${replaceMacros(char.description)}\n`;
+            }
+            if (char.personality) {
+                charInfo += `Personality: ${replaceMacros(char.personality)}\n`;
+            }
+            if (char.scenario) {
+                charInfo += `Scenario: ${replaceMacros(char.scenario)}\n`;
+            }
+        }
+        
+        // Chat history (will be handled specially)
+        const chatHistory = [];
+        if (ctx.chat?.length) {
+            for (const msg of ctx.chat) {
+                if (msg.is_system) continue;
+                let content = stripXmlTags(msg.mes || "").replace(/<br\s*\/?>/gi, '\n');
+                if (!content.trim()) continue;
+                const speaker = msg.is_user ? userName : charName;
+                chatHistory.push({ 
+                    role: msg.is_user ? "user" : "assistant", 
+                    content: content,
+                    name: speaker
+                });
+            }
+        }
+        
+        // Previous hype
+        let previousHype = '';
+        const hypeHistory = getChatHistory();
+        if (settings.storeAndSendEnabled && hypeHistory.length > 0) {
+            const count = parseInt(settings.storeAndSendCount) || 4;
+            const recentHype = hypeHistory.slice(-count).map(entry => {
+                const msg = typeof entry === 'string' ? entry : entry.text;
+                return `[Your previous commentary]: ${msg}`;
+            });
+            previousHype = recentHype.join('\n');
+        }
+        
+        // Prefill
+        const prefill = persona.prefill ? replaceMacros(persona.prefill) : '';
+        
+        return {
+            main_prompt: mainPrompt,
+            user_persona: userPersona,
+            char_info: charInfo,
+            chat_history: chatHistory, // Array, handled specially
+            previous_hype: previousHype,
+            prefill: prefill,
+            user: userName,
+            char: charName,
+            // Conditionals
+            if_user_persona: !!userPersonaRaw,
+            if_char_info: !!charInfo,
+            if_previous_hype: !!previousHype,
+            if_prefill: !!prefill
+        };
+    }
+
+    /**
+     * Builds the messages array from a template
+     * @param {string} templateJson - JSON template string
+     * @param {Object} data - Data from gatherTemplateData()
+     * @param {number} maxContextTokens - Max tokens for context
+     * @returns {Object} { messages: Array, prefillText: string }
+     */
+    function buildMessagesFromTemplate(templateJson, data, maxContextTokens) {
+        let template;
+        try {
+            template = JSON.parse(templateJson);
+        } catch (e) {
+            error('Invalid template JSON:', e);
+            throw new Error('Invalid prompt template JSON. Please check your template syntax.');
+        }
+        
+        if (!Array.isArray(template)) {
+            throw new Error('Prompt template must be a JSON array.');
+        }
+        
+        const messages = [];
+        let prefillText = '';
+        let chatHistoryInserted = false;
+        
+        for (const item of template) {
+            // Check if this is a chat history marker
+            if (item.marker === '{{chat_history}}') {
+                // Calculate available tokens
+                const currentTokens = messages.reduce((acc, m) => acc + estimateTokens(m.content), 0);
+                const available = Math.max(0, maxContextTokens - currentTokens - 300);
+                
+                // Add chat history messages (trimmed to fit)
+                let tokens = 0;
+                const validHistory = [];
+                for (let i = data.chat_history.length - 1; i >= 0; i--) {
+                    const t = estimateTokens(data.chat_history[i].content);
+                    if (tokens + t > available) break;
+                    tokens += t;
+                    validHistory.unshift(data.chat_history[i]);
+                }
+                messages.push(...validHistory);
+                chatHistoryInserted = true;
+                continue;
+            }
+            
+            // Check enabled condition
+            if (item.enabled !== undefined) {
+                const conditionKey = item.enabled.replace(/\{\{|\}\}/g, '');
+                if (data[conditionKey] === false || data[conditionKey] === '' || data[conditionKey] === null) {
+                    continue;
+                }
+            }
+            
+            // Replace placeholders in content
+            let content = item.content || '';
+            for (const [key, value] of Object.entries(data)) {
+                if (typeof value === 'string') {
+                    content = content.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+                }
+            }
+            
+            // Skip empty content
+            if (!content.trim()) continue;
+            
+            // Track prefill for later stripping
+            if (item.role === 'assistant' && content === data.prefill && data.prefill) {
+                prefillText = content;
+            }
+            
+            messages.push({
+                role: item.role || 'system',
+                content: content
+            });
+        }
+        
+        // Fallback: if chat history wasn't inserted via marker, add it at the end
+        if (!chatHistoryInserted && data.chat_history.length > 0) {
+            const currentTokens = messages.reduce((acc, m) => acc + estimateTokens(m.content), 0);
+            const available = Math.max(0, maxContextTokens - currentTokens - 300);
+            
+            let tokens = 0;
+            const validHistory = [];
+            for (let i = data.chat_history.length - 1; i >= 0; i--) {
+                const t = estimateTokens(data.chat_history[i].content);
+                if (tokens + t > available) break;
+                tokens += t;
+                validHistory.unshift(data.chat_history[i]);
+            }
+            
+            // Insert before the last message if it's an assistant (prefill)
+            const lastMsg = messages[messages.length - 1];
+            if (lastMsg && lastMsg.role === 'assistant') {
+                messages.splice(messages.length - 1, 0, ...validHistory);
+            } else {
+                messages.push(...validHistory);
+            }
+        }
+        
+        return { messages, prefillText };
+    }
+
     async function generateHype() {
         if (State.isGenerating) {
             toastr.warning('Already generating...');
@@ -633,93 +858,13 @@
                 throw new Error("No Connection Profile selected. Open Settings → Cheerleader.");
             }
 
-            // Apply macro replacement to main prompt
-            const mainPromptText = replaceMacros(persona.mainPrompt || DEFAULTS.MAIN_PROMPT);
-            let messages = [{ role: "system", content: mainPromptText }];
-
-            // Get user and character names
-            const userName = ctx.name1 || 'User';
-            const charName = ctx.name2 || 'Character';
-
-            // Add user persona if available
-            const userPersona = getUserPersona();
-            if (userPersona) {
-                const personaText = replaceMacros(userPersona);
-                messages.push({ 
-                    role: "system", 
-                    content: `[User Persona - ${userName}]\n${personaText}` 
-                });
-            }
-
-            // Add character context
-            const charId = ctx.characterId;
-            if (charId !== undefined && ctx.characters?.[charId]) {
-                const char = ctx.characters[charId];
-                let ctx_block = `[Character - ${charName}]\n`;
-                ctx_block += `Name: ${char.name}\n`;
-                if (char.description) {
-                    const charDesc = replaceMacros(char.description);
-                    ctx_block += `Description: ${charDesc}\n`;
-                }
-                if (char.personality) {
-                    const charPersonality = replaceMacros(char.personality);
-                    ctx_block += `Personality: ${charPersonality}\n`;
-                }
-                if (char.scenario) {
-                    const charScenario = replaceMacros(char.scenario);
-                    ctx_block += `Scenario: ${charScenario}\n`;
-                }
-                messages.push({ role: "system", content: ctx_block });
-            }
-
-            // Build chat history
-            const history = [];
-            if (ctx.chat?.length) {
-                for (const msg of ctx.chat) {
-                    if (msg.is_system) continue;
-                    let content = stripXmlTags(msg.mes || "").replace(/<br\s*\/?>/gi, '\n');
-                    if (!content.trim()) continue;
-                    // Add speaker name prefix for clarity
-                    const speaker = msg.is_user ? userName : charName;
-                    history.push({ 
-                        role: msg.is_user ? "user" : "assistant", 
-                        content: content,
-                        name: speaker
-                    });
-                }
-            }
-
-            // Trim to context limit
+            // Gather template data
+            const data = gatherTemplateData();
             const maxCtx = parseInt(persona.maxContextTokens) || DEFAULTS.MAX_CONTEXT;
-            const systemTokens = messages.reduce((acc, m) => acc + estimateTokens(m.content), 0);
-            const available = Math.max(0, maxCtx - systemTokens - 300);
-
-            let tokens = 0;
-            const validHistory = [];
-            for (let i = history.length - 1; i >= 0; i--) {
-                const t = estimateTokens(history[i].content);
-                if (tokens + t > available) break;
-                tokens += t;
-                validHistory.unshift(history[i]);
-            }
-            messages = messages.concat(validHistory);
-
-            // Add previous hype messages if enabled
-            const hypeHistory = getChatHistory();
-            if (settings.storeAndSendEnabled && hypeHistory.length > 0) {
-                const count = parseInt(settings.storeAndSendCount) || 4;
-                hypeHistory.slice(-count).forEach(entry => {
-                    const msg = typeof entry === 'string' ? entry : entry.text;
-                    messages.push({ role: "assistant", content: `[Your previous commentary]: ${msg}` });
-                });
-            }
-
-            // Add prefill (also apply macro replacement)
-            let prefillText = '';
-            if (persona.prefill) {
-                prefillText = replaceMacros(persona.prefill);
-                messages.push({ role: "assistant", content: prefillText });
-            }
+            
+            // Build messages from template
+            const template = persona.promptTemplate || DEFAULTS.PROMPT_TEMPLATE;
+            const { messages, prefillText } = buildMessagesFromTemplate(template, data, maxCtx);
 
             // Send request
             const svc = ctx.ConnectionManagerRequestService;
@@ -739,7 +884,7 @@
 
             if (!text) throw new Error("Empty response content.");
 
-            // Strip prefill from response (use the macro-replaced version)
+            // Strip prefill from response
             if (prefillText && text.startsWith(prefillText)) {
                 text = text.substring(prefillText.length).trim();
             }
@@ -810,6 +955,9 @@
         updatePersonaDropdown();
         updatePresetDropdown();
         updatePromptLibraryDropdown();
+        
+        // Prompt template
+        $('#cheerleader-prompt-template').val(persona.promptTemplate || DEFAULTS.PROMPT_TEMPLATE);
     }
 
     function updatePersonaDropdown() {
@@ -1546,6 +1694,76 @@
             toastr.success('CSS saved');
         });
 
+        // Prompt Template Editor
+        $doc.on('click', '#cheerleader-template-save', () => {
+            const template = $('#cheerleader-prompt-template').val();
+            try {
+                JSON.parse(template);
+                getActivePersona().promptTemplate = template;
+                saveSettings();
+                toastr.success('Template saved!');
+            } catch (e) {
+                toastr.error('Invalid JSON: ' + e.message);
+            }
+        });
+
+        $doc.on('click', '#cheerleader-template-reset', () => {
+            if (!confirm('Reset template to default?')) return;
+            getActivePersona().promptTemplate = DEFAULTS.PROMPT_TEMPLATE;
+            $('#cheerleader-prompt-template').val(DEFAULTS.PROMPT_TEMPLATE);
+            saveSettings();
+            toastr.success('Template reset to default');
+        });
+
+        $doc.on('click', '#cheerleader-template-validate', () => {
+            const template = $('#cheerleader-prompt-template').val();
+            try {
+                const parsed = JSON.parse(template);
+                if (!Array.isArray(parsed)) {
+                    toastr.error('Template must be a JSON array');
+                    return;
+                }
+                toastr.success('Valid JSON! Template has ' + parsed.length + ' entries.');
+            } catch (e) {
+                toastr.error('Invalid JSON: ' + e.message);
+            }
+        });
+
+        $doc.on('click', '#cheerleader-template-preview', () => {
+            const template = $('#cheerleader-prompt-template').val();
+            try {
+                const data = gatherTemplateData();
+                const maxCtx = parseInt(getActivePersona().maxContextTokens) || DEFAULTS.MAX_CONTEXT;
+                const { messages } = buildMessagesFromTemplate(template, data, maxCtx);
+                
+                let html = messages.map(msg => {
+                    const roleClass = msg.role || 'system';
+                    const content = (msg.content || '').substring(0, 500) + (msg.content?.length > 500 ? '...' : '');
+                    return `<div class="cheerleader-preview-message ${roleClass}">
+                        <div class="cheerleader-preview-role">${msg.role}${msg.name ? ' (' + msg.name + ')' : ''}</div>
+                        <div class="cheerleader-preview-content">${$('<div>').text(content).html()}</div>
+                    </div>`;
+                }).join('');
+                
+                $('body').append(`
+                    <div id="cheerleader-prompt-editor-overlay"></div>
+                    <div id="cheerleader-template-preview-popup">
+                        <div class="cheerleader-editor-header">
+                            <h3>Preview: ${messages.length} Messages</h3>
+                            <span id="close-template-preview">✕</span>
+                        </div>
+                        <div>${html}</div>
+                    </div>
+                `);
+                
+                $('#close-template-preview, #cheerleader-prompt-editor-overlay').on('click', () => {
+                    $('#cheerleader-template-preview-popup, #cheerleader-prompt-editor-overlay').remove();
+                });
+            } catch (e) {
+                toastr.error('Preview failed: ' + e.message);
+            }
+        });
+
         // Hype button
         $doc.on('click', '#cheerleader-hype-btn', (e) => {
             e.preventDefault();
@@ -1784,6 +2002,55 @@
                         </div>
                     </div>
 
+                    <!-- Prompt Structure Editor Drawer -->
+                    <div class="cheerleader-drawer">
+                        <div class="inline-drawer">
+                            <div class="inline-drawer-toggle inline-drawer-header">
+                                <b>Prompt Structure (Advanced)</b>
+                                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+                            </div>
+                            <div class="inline-drawer-content">
+                                <div class="cheerleader-section">
+                                    <div class="cheerleader-info-box">
+                                        <b>Full control over the API request structure.</b><br>
+                                        Edit the JSON template below to customize exactly how messages are sent to the API.
+                                    </div>
+                                </div>
+                                <div class="cheerleader-section">
+                                    <label>Available Placeholders:</label>
+                                    <div class="cheerleader-placeholder-list">
+                                        <code>{{main_prompt}}</code> - Your main system prompt<br>
+                                        <code>{{user_persona}}</code> - User's persona description<br>
+                                        <code>{{char_info}}</code> - Character info (name, description, personality, scenario)<br>
+                                        <code>{{chat_history}}</code> - Chat messages (use as marker)<br>
+                                        <code>{{previous_hype}}</code> - Previous hype messages<br>
+                                        <code>{{prefill}}</code> - Assistant prefill text<br>
+                                        <code>{{user}}</code> / <code>{{char}}</code> - User/Character names
+                                    </div>
+                                </div>
+                                <div class="cheerleader-section">
+                                    <label>Conditional Fields:</label>
+                                    <div class="cheerleader-placeholder-list">
+                                        Use <code>"enabled": "{{if_user_persona}}"</code> etc. to conditionally include messages.<br>
+                                        Available: <code>if_user_persona</code>, <code>if_char_info</code>, <code>if_previous_hype</code>, <code>if_prefill</code>
+                                    </div>
+                                </div>
+                                <div class="cheerleader-section">
+                                    <label>Prompt Template (JSON)</label>
+                                    <textarea id="cheerleader-prompt-template" class="text_pole cheerleader-code" rows="16" spellcheck="false"></textarea>
+                                </div>
+                                <div class="cheerleader-row" style="gap:10px">
+                                    <button id="cheerleader-template-save" class="menu_button" style="flex:1"><i class="fa-solid fa-save"></i> Save Template</button>
+                                    <button id="cheerleader-template-reset" class="menu_button" style="flex:1"><i class="fa-solid fa-undo"></i> Reset to Default</button>
+                                </div>
+                                <div class="cheerleader-row" style="gap:10px; margin-top:10px">
+                                    <button id="cheerleader-template-preview" class="menu_button" style="flex:1"><i class="fa-solid fa-eye"></i> Preview Output</button>
+                                    <button id="cheerleader-template-validate" class="menu_button" style="flex:1"><i class="fa-solid fa-check"></i> Validate JSON</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Auto-Hype Settings Drawer -->
                     <div class="cheerleader-drawer">
                         <div class="inline-drawer">
@@ -1994,6 +2261,52 @@
         .cheerleader-editor-section label { display: block; margin-bottom: 5px; font-weight: bold; }
         .cheerleader-editor-section input, .cheerleader-editor-section textarea { width: 100%; box-sizing: border-box; }
         .cheerleader-editor-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+        /* Prompt Structure Editor styles */
+        .cheerleader-info-box {
+            padding: 10px;
+            background: rgba(100, 100, 255, 0.1);
+            border: 1px solid rgba(100, 100, 255, 0.3);
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        .cheerleader-placeholder-list {
+            padding: 8px 12px;
+            background: var(--SmartThemeBlurTintColor);
+            border-radius: 4px;
+            font-size: 0.85em;
+            line-height: 1.6;
+        }
+        .cheerleader-placeholder-list code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #ffa500;
+        }
+        #cheerleader-prompt-template {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            tab-size: 2;
+        }
+        #cheerleader-template-preview-popup {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--SmartThemeBodyColor); border: 2px solid var(--SmartThemeBorderColor);
+            border-radius: 10px; padding: 20px; width: 90%; max-width: 700px; max-height: 80vh; z-index: 9999;
+            overflow-y: auto;
+        }
+        .cheerleader-preview-message {
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+        .cheerleader-preview-message.system { background: rgba(100,100,255,0.1); border-color: #6666ff; }
+        .cheerleader-preview-message.user { background: rgba(100,255,100,0.1); border-color: #66ff66; }
+        .cheerleader-preview-message.assistant { background: rgba(255,100,100,0.1); border-color: #ff6666; }
+        .cheerleader-preview-role { font-weight: bold; text-transform: uppercase; font-size: 0.8em; margin-bottom: 4px; }
+        .cheerleader-preview-content { white-space: pre-wrap; word-break: break-word; font-size: 0.9em; max-height: 200px; overflow-y: auto; }
     </style>
     `;
 
