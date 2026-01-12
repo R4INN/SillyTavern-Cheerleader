@@ -227,21 +227,18 @@
 
     function getDefaultSettings() {
         return {
-            // Active persona settings
-            activePersonaIndex: 0,
-            personas: [{
-                name: DEFAULTS.CHAR_NAME,
-                profileId: "",
-                profileName: "Current",
-                mainPrompt: DEFAULTS.MAIN_PROMPT,
-                prefill: DEFAULTS.PREFILL,
-                maxResponseTokens: DEFAULTS.MAX_RESPONSE,
-                maxContextTokens: DEFAULTS.MAX_CONTEXT,
-                avatarUrl: DEFAULTS.AVATAR,
-                promptTemplate: DEFAULTS.PROMPT_TEMPLATE
-            }],
+            // Main settings (flat structure)
+            charName: DEFAULTS.CHAR_NAME,
+            profileId: "",
+            profileName: "Current",
+            mainPrompt: DEFAULTS.MAIN_PROMPT,
+            prefill: DEFAULTS.PREFILL,
+            maxResponseTokens: DEFAULTS.MAX_RESPONSE,
+            maxContextTokens: DEFAULTS.MAX_CONTEXT,
+            avatarUrl: DEFAULTS.AVATAR,
+            promptTemplate: DEFAULTS.PROMPT_TEMPLATE,
 
-            // Global settings
+            // Behavior settings
             autoHypeChance: DEFAULTS.AUTO_HYPE_CHANCE,
             cooldownMessages: DEFAULTS.COOLDOWN,
             storeAndSendEnabled: false,
@@ -277,9 +274,9 @@
             // Presets
             presets: {
                 "Default": {
+                    charName: DEFAULTS.CHAR_NAME,
                     mainPrompt: DEFAULTS.MAIN_PROMPT,
                     prefill: DEFAULTS.PREFILL,
-                    charName: DEFAULTS.CHAR_NAME,
                     maxResponseTokens: DEFAULTS.MAX_RESPONSE,
                     maxContextTokens: DEFAULTS.MAX_CONTEXT,
                     autoHypeChance: DEFAULTS.AUTO_HYPE_CHANCE,
@@ -288,7 +285,8 @@
                     storeAndSendEnabled: false,
                     storeAndSendCount: DEFAULTS.STORE_SEND_COUNT,
                     profileId: "",
-                    profileName: "Current"
+                    profileName: "Current",
+                    promptTemplate: DEFAULTS.PROMPT_TEMPLATE
                 }
             },
             activePreset: "Default"
@@ -306,19 +304,21 @@
 
         const settings = extensionSettings[EXTENSION_NAME];
 
-        // Migrate old format to new personas format
-        if (!settings.personas) {
-            settings.personas = [{
-                name: settings.charName || DEFAULTS.CHAR_NAME,
-                profileId: settings.profileId || "",
-                profileName: settings.profileName || "Current",
-                mainPrompt: settings.mainPrompt || DEFAULTS.MAIN_PROMPT,
-                prefill: settings.prefill || DEFAULTS.PREFILL,
-                maxResponseTokens: settings.maxResponseTokens || DEFAULTS.MAX_RESPONSE,
-                maxContextTokens: settings.maxContextTokens || DEFAULTS.MAX_CONTEXT,
-                avatarUrl: settings.avatarUrl || DEFAULTS.AVATAR
-            }];
-            settings.activePersonaIndex = 0;
+        // Migrate from old personas format to flat structure
+        if (settings.personas && settings.personas.length > 0) {
+            const persona = settings.personas[settings.activePersonaIndex || 0] || settings.personas[0];
+            settings.charName = persona.name || settings.charName || DEFAULTS.CHAR_NAME;
+            settings.profileId = persona.profileId || settings.profileId || "";
+            settings.profileName = persona.profileName || settings.profileName || "Current";
+            settings.mainPrompt = persona.mainPrompt || settings.mainPrompt || DEFAULTS.MAIN_PROMPT;
+            settings.prefill = persona.prefill || settings.prefill || DEFAULTS.PREFILL;
+            settings.maxResponseTokens = persona.maxResponseTokens || settings.maxResponseTokens || DEFAULTS.MAX_RESPONSE;
+            settings.maxContextTokens = persona.maxContextTokens || settings.maxContextTokens || DEFAULTS.MAX_CONTEXT;
+            settings.avatarUrl = persona.avatarUrl || settings.avatarUrl || DEFAULTS.AVATAR;
+            settings.promptTemplate = persona.promptTemplate || settings.promptTemplate || DEFAULTS.PROMPT_TEMPLATE;
+            // Remove old personas data
+            delete settings.personas;
+            delete settings.activePersonaIndex;
         }
 
         // Ensure new settings exist
@@ -328,24 +328,20 @@
         if (!settings.promptLibrary) {
             settings.promptLibrary = getDefaultSettings().promptLibrary;
         }
-        
-        // Ensure all personas have promptTemplate
-        if (settings.personas) {
-            settings.personas.forEach(p => {
-                if (!p.promptTemplate) {
-                    p.promptTemplate = DEFAULTS.PROMPT_TEMPLATE;
-                }
-            });
+        if (!settings.promptTemplate) {
+            settings.promptTemplate = DEFAULTS.PROMPT_TEMPLATE;
+        }
+        if (!settings.charName) {
+            settings.charName = DEFAULTS.CHAR_NAME;
         }
 
         State.cache = settings;
         return settings;
     }
 
+    // Alias for backwards compatibility - now just returns settings directly
     function getActivePersona() {
-        const settings = getSettings();
-        const index = settings.activePersonaIndex || 0;
-        return settings.personas[index] || settings.personas[0];
+        return getSettings();
     }
 
     function saveSettings() {
@@ -407,7 +403,7 @@
         storage[chatId].push({
             text: message,
             timestamp: Date.now(),
-            persona: getActivePersona().name
+            persona: getSettings().charName
         });
 
         // Limit history per chat to prevent bloat
@@ -539,7 +535,7 @@
         const settings = getSettings();
         const persona = getActivePersona();
         let avatarUrl = persona.avatarUrl || '';
-        const charName = persona.name || 'Cheerleader';
+        const charName = persona.charName || 'Cheerleader';
 
         // Handle Windows paths
         if (avatarUrl?.match(/^[A-Za-z]:\\/)) {
@@ -919,7 +915,7 @@
         const persona = getActivePersona();
 
         // Persona fields
-        $('#cheerleader-char-name').val(persona.name || DEFAULTS.CHAR_NAME);
+        $('#cheerleader-char-name').val(persona.charName || DEFAULTS.CHAR_NAME);
         $('#cheerleader-main-prompt').val(persona.mainPrompt || DEFAULTS.MAIN_PROMPT);
         $('#cheerleader-prefill').val(persona.prefill || DEFAULTS.PREFILL);
         $('#cheerleader-max-response').val(persona.maxResponseTokens || DEFAULTS.MAX_RESPONSE);
@@ -951,25 +947,12 @@
         updateCSSDropdown();
         applyCSSPreset();
 
-        // Personas
-        updatePersonaDropdown();
+        // Presets & Library
         updatePresetDropdown();
         updatePromptLibraryDropdown();
         
         // Prompt template
-        $('#cheerleader-prompt-template').val(persona.promptTemplate || DEFAULTS.PROMPT_TEMPLATE);
-    }
-
-    function updatePersonaDropdown() {
-        const s = getSettings();
-        const $select = $('#cheerleader-persona-select').empty();
-
-        s.personas.forEach((persona, i) => {
-            $select.append($('<option>', { value: i, text: persona.name }));
-        });
-
-        $select.val(s.activePersonaIndex || 0);
-        $('#cheerleader-delete-persona').prop('disabled', s.personas.length <= 1);
+        $('#cheerleader-prompt-template').val(s.promptTemplate || DEFAULTS.PROMPT_TEMPLATE);
     }
 
     function updatePresetDropdown() {
@@ -1124,10 +1107,9 @@
         const prompt = s.promptLibrary?.[name];
         if (!prompt) return;
 
-        const persona = getActivePersona();
-        persona.mainPrompt = prompt.mainPrompt;
+        s.mainPrompt = prompt.mainPrompt;
         if (prompt.prefill) {
-            persona.prefill = prompt.prefill;
+            s.prefill = prompt.prefill;
         }
 
         saveSettings();
@@ -1146,20 +1128,19 @@
     }
 
     function saveCurrentPromptToLibrary() {
-        const persona = getActivePersona();
-        const name = prompt('Save prompt as:', persona.name + ' Prompt');
+        const s = getSettings();
+        const name = prompt('Save prompt as:', s.charName + ' Prompt');
         if (!name) return;
 
-        const s = getSettings();
         if (s.promptLibrary?.[name]) {
             if (!confirm(`Overwrite existing prompt "${name}"?`)) return;
         }
 
         s.promptLibrary = s.promptLibrary || {};
         s.promptLibrary[name] = {
-            mainPrompt: persona.mainPrompt || DEFAULTS.MAIN_PROMPT,
-            prefill: persona.prefill || '',
-            description: `Saved from ${persona.name}`
+            mainPrompt: s.mainPrompt || DEFAULTS.MAIN_PROMPT,
+            prefill: s.prefill || '',
+            description: `Saved from ${s.charName}`
         };
 
         saveSettings();
@@ -1183,69 +1164,6 @@
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PERSONA MANAGEMENT
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    function addNewPersona() {
-        const name = prompt("New Persona Name:", "New Cheerleader");
-        if (!name) return;
-
-        const s = getSettings();
-        s.personas.push({
-            name: name,
-            profileId: "",
-            profileName: "Current",
-            mainPrompt: DEFAULTS.MAIN_PROMPT,
-            prefill: DEFAULTS.PREFILL,
-            maxResponseTokens: DEFAULTS.MAX_RESPONSE,
-            maxContextTokens: DEFAULTS.MAX_CONTEXT,
-            avatarUrl: ""
-        });
-
-        s.activePersonaIndex = s.personas.length - 1;
-        saveSettings();
-        updateUI();
-        initProfileDropdown();
-        toastr.success(`Created persona: ${name}`);
-    }
-
-    function deleteCurrentPersona() {
-        const s = getSettings();
-        if (s.personas.length <= 1) {
-            toastr.error("Cannot delete the last persona");
-            return;
-        }
-
-        const persona = getActivePersona();
-        if (!confirm(`Delete persona: ${persona.name}?`)) return;
-
-        s.personas.splice(s.activePersonaIndex, 1);
-        s.activePersonaIndex = Math.max(0, s.activePersonaIndex - 1);
-        saveSettings();
-        updateUI();
-        initProfileDropdown();
-        toastr.success("Persona deleted");
-    }
-
-    function duplicateCurrentPersona() {
-        const s = getSettings();
-        const current = getActivePersona();
-        const name = prompt("Duplicate Persona Name:", current.name + " Copy");
-        if (!name) return;
-
-        s.personas.push({
-            ...JSON.parse(JSON.stringify(current)),
-            name: name
-        });
-
-        s.activePersonaIndex = s.personas.length - 1;
-        saveSettings();
-        updateUI();
-        initProfileDropdown();
-        toastr.success(`Duplicated as: ${name}`);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
     // PRESET MANAGEMENT
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1254,19 +1172,17 @@
         const preset = settings.presets?.[name];
         if (!preset) return;
 
-        const persona = getActivePersona();
-        Object.assign(persona, {
+        // Load all preset values directly into settings
+        Object.assign(settings, {
             mainPrompt: preset.mainPrompt || DEFAULTS.MAIN_PROMPT,
             prefill: preset.prefill || DEFAULTS.PREFILL,
-            name: preset.charName || persona.name,
+            charName: preset.charName || DEFAULTS.CHAR_NAME,
             maxResponseTokens: preset.maxResponseTokens || DEFAULTS.MAX_RESPONSE,
             maxContextTokens: preset.maxContextTokens || DEFAULTS.MAX_CONTEXT,
             avatarUrl: preset.avatarUrl || '',
             profileId: preset.profileId || "",
-            profileName: preset.profileName || "Current"
-        });
-
-        Object.assign(settings, {
+            profileName: preset.profileName || "Current",
+            promptTemplate: preset.promptTemplate || DEFAULTS.PROMPT_TEMPLATE,
             autoHypeChance: preset.autoHypeChance || 0,
             cooldownMessages: preset.cooldownMessages || 0,
             storeAndSendEnabled: preset.storeAndSendEnabled || false,
@@ -1274,6 +1190,7 @@
             activePreset: name
         });
 
+        invalidateCache();
         saveSettings();
         updateUI();
         initProfileDropdown();
@@ -1285,22 +1202,22 @@
         if (!name) return;
 
         const settings = getSettings();
-        const persona = getActivePersona();
 
         settings.presets = settings.presets || {};
         settings.presets[name] = {
-            mainPrompt: persona.mainPrompt || DEFAULTS.MAIN_PROMPT,
-            prefill: persona.prefill || DEFAULTS.PREFILL,
-            charName: persona.name || DEFAULTS.CHAR_NAME,
-            maxResponseTokens: persona.maxResponseTokens || DEFAULTS.MAX_RESPONSE,
-            maxContextTokens: persona.maxContextTokens || DEFAULTS.MAX_CONTEXT,
+            mainPrompt: settings.mainPrompt || DEFAULTS.MAIN_PROMPT,
+            prefill: settings.prefill || DEFAULTS.PREFILL,
+            charName: settings.charName || DEFAULTS.CHAR_NAME,
+            maxResponseTokens: settings.maxResponseTokens || DEFAULTS.MAX_RESPONSE,
+            maxContextTokens: settings.maxContextTokens || DEFAULTS.MAX_CONTEXT,
             autoHypeChance: settings.autoHypeChance || 0,
             cooldownMessages: settings.cooldownMessages || 0,
-            avatarUrl: persona.avatarUrl || '',
+            avatarUrl: settings.avatarUrl || '',
             storeAndSendEnabled: settings.storeAndSendEnabled || false,
             storeAndSendCount: settings.storeAndSendCount || DEFAULTS.STORE_SEND_COUNT,
-            profileId: persona.profileId || "",
-            profileName: persona.profileName || "Current"
+            profileId: settings.profileId || "",
+            profileName: settings.profileName || "Current",
+            promptTemplate: settings.promptTemplate || DEFAULTS.PROMPT_TEMPLATE
         };
         settings.activePreset = name;
 
@@ -1397,7 +1314,7 @@
                 const result = await response.json();
                 const avatarPath = result.path || `/user/extensions/SillyTavern-Cheerleader/avatars/${filename}`;
 
-                getActivePersona().avatarUrl = avatarPath;
+                getSettings().avatarUrl = avatarPath;
                 $('#cheerleader-avatar').val(avatarPath);
                 $('#cheerleader-avatar-preview').attr('src', avatarPath).show();
                 saveSettings();
@@ -1410,7 +1327,7 @@
 
         try {
             const resizedDataUrl = await resizeImage(file, 128);
-            getActivePersona().avatarUrl = resizedDataUrl;
+            getSettings().avatarUrl = resizedDataUrl;
             $('#cheerleader-avatar').val('[Embedded Thumbnail]');
             $('#cheerleader-avatar-preview').attr('src', resizedDataUrl).show();
             saveSettings();
@@ -1430,10 +1347,10 @@
         const svc = ctx.ConnectionManagerRequestService;
 
         if (svc?.handleDropdown) {
-            const persona = getActivePersona();
-            svc.handleDropdown('#cheerleader-profile', persona.profileId, (profile) => {
-                persona.profileId = profile?.id || '';
-                persona.profileName = profile?.name || 'Current';
+            const settings = getSettings();
+            svc.handleDropdown('#cheerleader-profile', settings.profileId, (profile) => {
+                settings.profileId = profile?.id || '';
+                settings.profileName = profile?.name || 'Current';
                 saveSettings();
             });
         }
@@ -1469,42 +1386,29 @@
         const $doc = $(document);
         const debouncedSave = debounce(saveSettings, 500);
 
-        // Persona selection
-        $doc.on('change', '#cheerleader-persona-select', function () {
-            getSettings().activePersonaIndex = parseInt(this.value) || 0;
-            saveSettings();
-            updateUI();
-            initProfileDropdown();
-        });
-
-        $doc.on('click', '#cheerleader-add-persona', addNewPersona);
-        $doc.on('click', '#cheerleader-delete-persona', deleteCurrentPersona);
-        $doc.on('click', '#cheerleader-duplicate-persona', duplicateCurrentPersona);
-
-        // Persona text inputs
+        // Settings text inputs
         $doc.on('input', '#cheerleader-char-name', function () {
-            getActivePersona().name = this.value;
+            getSettings().charName = this.value;
             debouncedSave();
-            updatePersonaDropdown();
         });
 
         $doc.on('input', '#cheerleader-main-prompt', function () {
-            getActivePersona().mainPrompt = this.value;
+            getSettings().mainPrompt = this.value;
             debouncedSave();
         });
 
         $doc.on('input', '#cheerleader-prefill', function () {
-            getActivePersona().prefill = this.value;
+            getSettings().prefill = this.value;
             debouncedSave();
         });
 
         $doc.on('input', '#cheerleader-max-context', function () {
-            getActivePersona().maxContextTokens = parseInt(this.value) || DEFAULTS.MAX_CONTEXT;
+            getSettings().maxContextTokens = parseInt(this.value) || DEFAULTS.MAX_CONTEXT;
             debouncedSave();
         });
 
         $doc.on('input', '#cheerleader-max-response', function () {
-            getActivePersona().maxResponseTokens = parseInt(this.value) || DEFAULTS.MAX_RESPONSE;
+            getSettings().maxResponseTokens = parseInt(this.value) || DEFAULTS.MAX_RESPONSE;
             debouncedSave();
         });
 
@@ -1542,7 +1446,7 @@
         // Avatar
         $doc.on('input', '#cheerleader-avatar', function () {
             const url = this.value;
-            getActivePersona().avatarUrl = url;
+            getSettings().avatarUrl = url;
             const $preview = $('#cheerleader-avatar-preview');
             url ? $preview.attr('src', url).show() : $preview.hide();
             debouncedSave();
@@ -1551,7 +1455,7 @@
         $doc.on('click', '#cheerleader-avatar-browse', () => $('#cheerleader-avatar-file').click());
 
         $doc.on('click', '#cheerleader-avatar-clear', () => {
-            getActivePersona().avatarUrl = '';
+            getSettings().avatarUrl = '';
             $('#cheerleader-avatar').val('');
             $('#cheerleader-avatar-preview').hide();
             saveSettings();
@@ -1699,7 +1603,7 @@
             const template = $('#cheerleader-prompt-template').val();
             try {
                 JSON.parse(template);
-                getActivePersona().promptTemplate = template;
+                getSettings().promptTemplate = template;
                 saveSettings();
                 toastr.success('Template saved!');
             } catch (e) {
@@ -1709,7 +1613,7 @@
 
         $doc.on('click', '#cheerleader-template-reset', () => {
             if (!confirm('Reset template to default?')) return;
-            getActivePersona().promptTemplate = DEFAULTS.PROMPT_TEMPLATE;
+            getSettings().promptTemplate = DEFAULTS.PROMPT_TEMPLATE;
             $('#cheerleader-prompt-template').val(DEFAULTS.PROMPT_TEMPLATE);
             saveSettings();
             toastr.success('Template reset to default');
@@ -1733,7 +1637,7 @@
             const template = $('#cheerleader-prompt-template').val();
             try {
                 const data = gatherTemplateData();
-                const maxCtx = parseInt(getActivePersona().maxContextTokens) || DEFAULTS.MAX_CONTEXT;
+                const maxCtx = parseInt(getSettings().maxContextTokens) || DEFAULTS.MAX_CONTEXT;
                 const { messages } = buildMessagesFromTemplate(template, data, maxCtx);
                 
                 let html = messages.map(msg => {
@@ -1899,17 +1803,6 @@
             </div>
             <div class="inline-drawer-content">
                 <div class="cheerleader-panel">
-                    <!-- Persona Selection -->
-                    <div class="cheerleader-section">
-                        <label>Active Persona <span class="cheerleader-tooltip" title="Create multiple cheerleader characters with different prompts and settings">?</span></label>
-                        <div class="cheerleader-row">
-                            <select id="cheerleader-persona-select" class="text_pole"></select>
-                            <button id="cheerleader-add-persona" class="menu_button" title="Add New Persona"><i class="fa-solid fa-plus"></i></button>
-                            <button id="cheerleader-duplicate-persona" class="menu_button" title="Duplicate Persona"><i class="fa-solid fa-copy"></i></button>
-                            <button id="cheerleader-delete-persona" class="menu_button" title="Delete Persona"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </div>
-
                     <!-- Preset Selection -->
                     <div class="cheerleader-section">
                         <label>Preset</label>
