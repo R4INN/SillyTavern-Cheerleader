@@ -1,0 +1,280 @@
+/* Cheerleader Hype Bot v2.0.0 - Enhanced Styles */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SETTINGS PANEL
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-settings {
+    padding: 10px;
+}
+
+.cheerleader-params {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cheerleader-params label {
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.cheerleader-params textarea {
+    resize: vertical;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HYPE BUTTON
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#cheerleader-hype-btn {
+    opacity: 0.85;
+    transition: opacity 0.2s, transform 0.15s;
+    user-select: none;
+}
+
+#cheerleader-hype-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+#cheerleader-hype-btn:active {
+    transform: scale(0.95);
+}
+
+#cheerleader-hype-btn.cheerleader-loading {
+    opacity: 0.5;
+    pointer-events: none;
+    animation: cheerleader-spin 1s linear infinite;
+}
+
+@keyframes cheerleader-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes cheerleader-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   OUTPUT BAR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#cheerleader-output-bar {
+    animation: cheerleader-fadeIn 0.3s ease-out;
+}
+
+@keyframes cheerleader-fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cheerleader-header {
+    font-weight: bold;
+    color: gold;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+#cheerleader-header {
+    display: flex;
+    align-items: center;
+}
+
+#close-cheerleader-bar {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s, transform 0.2s;
+    font-size: 1.2em;
+    padding: 4px 8px;
+}
+
+#close-cheerleader-bar:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+#cheerleader-output-content {
+    font-style: italic;
+    line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HISTORY POPUP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#cheerleader-history-overlay {
+    animation: cheerleader-fadeIn 0.2s ease-out;
+}
+
+#cheerleader-history-popup {
+    animation: cheerleader-popIn 0.3s ease-out;
+}
+
+@keyframes cheerleader-popIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.cheerleader-history-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--SmartThemeBorderColor) transparent;
+}
+
+.cheerleader-history-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.cheerleader-history-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cheerleader-history-list::-webkit-scrollbar-thumb {
+    background-color: var(--SmartThemeBorderColor);
+    border-radius: 3px;
+}
+
+.cheerleader-history-item {
+    transition: background-color 0.2s;
+}
+
+.cheerleader-history-item:hover {
+    background-color: var(--SmartThemeEmColor);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOOLTIPS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-tooltip {
+    cursor: help;
+    color: var(--SmartThemeQuoteColor);
+    margin-left: 4px;
+    font-size: 0.85em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 50%;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.cheerleader-tooltip:hover {
+    background-color: var(--SmartThemeBlurTintColor);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COOLDOWN INDICATOR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-cooldown-indicator {
+    font-size: 0.85em;
+    color: var(--SmartThemeQuoteColor);
+    padding: 6px 10px;
+    background: var(--SmartThemeBlurTintColor);
+    border-radius: 4px;
+    margin-top: 5px;
+    border-left: 3px solid var(--SmartThemeQuoteColor);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-danger {
+    background: rgba(200, 50, 50, 0.2) !important;
+    border-color: rgba(200, 50, 50, 0.5) !important;
+}
+
+.cheerleader-danger:hover {
+    background: rgba(200, 50, 50, 0.4) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DRAWER ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#cheerleader-settings .inline-drawer-content {
+    transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+}
+
+#cheerleader-settings .inline-drawer-header {
+    transition: background-color 0.2s;
+}
+
+#cheerleader-settings .inline-drawer-header:hover {
+    background-color: var(--SmartThemeBlurTintColor);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AVATAR PREVIEW
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-avatar-preview {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+    display: none;
+    border: 1px solid var(--SmartThemeBorderColor);
+    transition: transform 0.2s;
+}
+
+.cheerleader-avatar-preview:hover {
+    transform: scale(1.5);
+    z-index: 100;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CSS EDITOR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-code {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    tab-size: 4;
+}
+
+.readonly-badge {
+    color: orange;
+    font-size: 0.8em;
+    padding: 2px 6px;
+    background: rgba(255, 165, 0, 0.1);
+    border-radius: 3px;
+    margin-left: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE ADJUSTMENTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    #cheerleader-history-popup {
+        max-width: 90vw;
+        padding: 15px;
+    }
+
+    .cheerleader-row {
+        flex-wrap: wrap;
+    }
+}
