@@ -71,9 +71,10 @@
             #cheerleader-avatar {
                 height: 40px;
                 width: 40px;
-                object-fit: cover;
+                object-fit: contain;
                 margin-right: 10px;
                 border-radius: 4px;
+                background: transparent;
             }
             #cheerleader-avatar-emoji {
                 margin-right: 8px;
@@ -92,11 +93,12 @@
             #cheerleader-avatar {
                 height: 50px;
                 width: 50px;
-                object-fit: cover;
+                object-fit: contain;
                 margin-right: 12px;
                 border-radius: 50%;
                 border: 2px solid #00ffff;
                 box-shadow: 0 0 10px rgba(0,255,255,0.5);
+                background: transparent;
             }
             #cheerleader-avatar-emoji {
                 margin-right: 10px;
@@ -122,9 +124,10 @@
             #cheerleader-avatar {
                 height: 24px;
                 width: 24px;
-                object-fit: cover;
+                object-fit: contain;
                 margin-right: 8px;
                 border-radius: 3px;
+                background: transparent;
             }
             #cheerleader-avatar-emoji {
                 margin-right: 6px;
@@ -161,9 +164,10 @@
             #cheerleader-avatar {
                 height: 36px;
                 width: 36px;
-                object-fit: cover;
+                object-fit: contain;
                 margin-right: 10px;
                 border-radius: 50%;
+                background: transparent;
             }
             #cheerleader-avatar-emoji {
                 margin-right: 8px;
@@ -531,6 +535,95 @@
     // OUTPUT DISPLAY
     // ═══════════════════════════════════════════════════════════════════════════
 
+    /**
+     * Makes an element draggable and resizable
+     * @param {jQuery} $element - The element to make draggable/resizable
+     * @param {jQuery} $dragHandle - The element to use as drag handle
+     */
+    function makeFloatingInteractive($element, $dragHandle) {
+        let isDragging = false;
+        let isResizing = false;
+        let startX, startY, startLeft, startTop, startWidth, startHeight;
+
+        // Add resize handle
+        const $resizeHandle = $('<div class="cheerleader-resize-handle"></div>');
+        $element.append($resizeHandle);
+
+        // Load saved position/size
+        const saved = getSettings().floatingPosition || {};
+        if (saved.left !== undefined) {
+            $element.css({
+                left: saved.left + 'px',
+                top: saved.top + 'px',
+                right: 'auto',
+                bottom: 'auto',
+                width: saved.width ? saved.width + 'px' : '400px',
+                height: saved.height ? saved.height + 'px' : 'auto'
+            });
+        }
+
+        // Drag functionality
+        $dragHandle.css('cursor', 'move');
+        $dragHandle.on('mousedown', (e) => {
+            if ($(e.target).is('#close-cheerleader-bar')) return;
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            const rect = $element[0].getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+            e.preventDefault();
+        });
+
+        // Resize functionality
+        $resizeHandle.on('mousedown', (e) => {
+            isResizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = $element.outerWidth();
+            startHeight = $element.outerHeight();
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        $(document).on('mousemove.cheerleaderFloat', (e) => {
+            if (isDragging) {
+                const newLeft = startLeft + (e.clientX - startX);
+                const newTop = startTop + (e.clientY - startY);
+                $element.css({
+                    left: Math.max(0, newLeft) + 'px',
+                    top: Math.max(0, newTop) + 'px',
+                    right: 'auto',
+                    bottom: 'auto'
+                });
+            } else if (isResizing) {
+                const newWidth = Math.max(200, startWidth + (e.clientX - startX));
+                const newHeight = Math.max(80, startHeight + (e.clientY - startY));
+                $element.css({
+                    width: newWidth + 'px',
+                    height: newHeight + 'px'
+                });
+            }
+        });
+
+        $(document).on('mouseup.cheerleaderFloat', () => {
+            if (isDragging || isResizing) {
+                // Save position
+                const rect = $element[0].getBoundingClientRect();
+                const s = getSettings();
+                s.floatingPosition = {
+                    left: rect.left,
+                    top: rect.top,
+                    width: $element.outerWidth(),
+                    height: $element.outerHeight()
+                };
+                saveSettings();
+            }
+            isDragging = false;
+            isResizing = false;
+        });
+    }
+
     function showHypeOutput(text) {
         const settings = getSettings();
         const persona = getActivePersona();
@@ -546,7 +639,7 @@
         let avatarHtml;
 
         if (avatarUrl) {
-            const style = useCSS ? '' : 'style="height:40px;width:40px;object-fit:cover;margin-right:10px;border-radius:4px"';
+            const style = useCSS ? '' : 'style="height:40px;width:40px;object-fit:contain;margin-right:10px;border-radius:4px;background:transparent"';
             avatarHtml = `<img id="cheerleader-avatar" src="${avatarUrl}" ${style} onerror="this.style.display='none'">`;
         } else {
             const style = useCSS ? '' : 'style="margin-right:8px;font-size:1.5em"';
@@ -578,14 +671,19 @@
                     $('#chat').length ? $('#chat').before($bar) : $('body').append($bar);
                     break;
                 case 'floating':
+                    $bar.addClass('cheerleader-floating');
                     $bar.css({
                         position: 'fixed',
                         bottom: '100px',
                         right: '20px',
                         zIndex: '9999',
-                        maxWidth: '400px'
+                        width: '400px',
+                        minWidth: '200px',
+                        minHeight: '80px',
+                        overflow: 'auto'
                     });
                     $('body').append($bar);
+                    makeFloatingInteractive($bar, $bar.find('.cheerleader-header'));
                     break;
                 case 'after_chat':
                 default:
@@ -928,7 +1026,14 @@
         $('#cheerleader-avatar').val(persona.avatarUrl || '');
 
         const $preview = $('#cheerleader-avatar-preview');
-        persona.avatarUrl ? $preview.attr('src', persona.avatarUrl).show() : $preview.hide();
+        const $clearBtn = $('#cheerleader-avatar-clear');
+        if (persona.avatarUrl) {
+            $preview.attr('src', persona.avatarUrl).show();
+            $clearBtn.show();
+        } else {
+            $preview.hide();
+            $clearBtn.hide();
+        }
 
         $('#cheerleader-store-send-enabled').prop('checked', s.storeAndSendEnabled);
         $('#cheerleader-store-send-count').val(s.storeAndSendCount || 4);
@@ -977,32 +1082,6 @@
             Object.keys(s.promptLibrary).sort().forEach(name => {
                 $select.append($('<option>', { value: name, text: name }));
             });
-        }
-
-        // Update preview
-        updatePromptPreview();
-    }
-
-    function updatePromptPreview() {
-        const s = getSettings();
-        const name = $('#cheerleader-prompt-library-select').val();
-        const $preview = $('#cheerleader-prompt-preview');
-
-        if (name && s.promptLibrary?.[name]) {
-            const prompt = s.promptLibrary[name];
-            let html = '';
-            if (prompt.description) {
-                html += `<div class="cheerleader-prompt-preview-desc">${prompt.description}</div>`;
-            }
-            html += `<div class="cheerleader-prompt-preview-label">Main Prompt:</div>`;
-            html += `<div class="cheerleader-prompt-preview-text">${prompt.mainPrompt || '(empty)'}</div>`;
-            if (prompt.prefill) {
-                html += `<div class="cheerleader-prompt-preview-label" style="margin-top:8px">Prefill:</div>`;
-                html += `<div class="cheerleader-prompt-preview-text">${prompt.prefill}</div>`;
-            }
-            $preview.html(html).addClass('visible');
-        } else {
-            $preview.removeClass('visible');
         }
     }
 
@@ -1087,7 +1166,6 @@
             saveSettings();
             updatePromptLibraryDropdown();
             $('#cheerleader-prompt-library-select').val(name);
-            updatePromptPreview();
 
             toastr.success(isEdit ? 'Prompt updated!' : 'Prompt saved to library!');
             closePopup();
@@ -1146,7 +1224,6 @@
         saveSettings();
         updatePromptLibraryDropdown();
         $('#cheerleader-prompt-library-select').val(name);
-        updatePromptPreview();
         toastr.success(`Saved prompt: ${name}`);
     }
 
@@ -1476,14 +1553,9 @@
         $doc.on('click', '#cheerleader-factory-reset', resetToFactory);
 
         // Prompt Library
-        $doc.on('change', '#cheerleader-prompt-library-select', updatePromptPreview);
         $doc.on('click', '#cheerleader-prompt-load', () => {
             const name = $('#cheerleader-prompt-library-select').val();
             if (name) loadPromptFromLibrary(name);
-        });
-        $doc.on('click', '#cheerleader-prompt-edit', () => {
-            const name = $('#cheerleader-prompt-library-select').val();
-            if (name) showPromptEditorPopup(name);
         });
         $doc.on('click', '#cheerleader-prompt-delete', () => {
             const name = $('#cheerleader-prompt-library-select').val();
@@ -1822,25 +1894,38 @@
                         <select id="cheerleader-profile" class="text_pole"></select>
                     </div>
 
-                    <!-- Persona Settings Drawer -->
+                    <!-- Persona & Prompt Drawer -->
                     <div class="cheerleader-drawer">
                         <div class="inline-drawer">
                             <div class="inline-drawer-toggle inline-drawer-header">
-                                <b>Persona Settings</b>
+                                <b>Persona & Prompt</b>
                                 <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
                             </div>
                             <div class="inline-drawer-content">
                                 <div class="cheerleader-section">
                                     <label>Character Name</label>
-                                    <input id="cheerleader-char-name" class="text_pole" type="text" placeholder="Cheerleader">
+                                    <div class="cheerleader-row">
+                                        <img id="cheerleader-avatar-preview" class="cheerleader-avatar-preview">
+                                        <input id="cheerleader-char-name" class="text_pole" type="text" placeholder="Cheerleader" style="flex:1">
+                                        <button id="cheerleader-avatar-browse" class="menu_button" title="Set Avatar"><i class="fa-solid fa-image"></i></button>
+                                        <button id="cheerleader-avatar-clear" class="menu_button" title="Clear Avatar" style="display:none"><i class="fa-solid fa-times"></i></button>
+                                    </div>
+                                    <input type="file" id="cheerleader-avatar-file" accept="image/*" style="display:none">
+                                    <input id="cheerleader-avatar" type="hidden">
+                                </div>
+
+                                <div class="cheerleader-section">
+                                    <label>Prompt Template <span class="cheerleader-tooltip" title="Load a saved prompt or create your own">?</span></label>
+                                    <div class="cheerleader-row">
+                                        <select id="cheerleader-prompt-library-select" class="text_pole" style="flex:1"></select>
+                                        <button id="cheerleader-prompt-load" class="menu_button" title="Load Selected Prompt"><i class="fa-solid fa-download"></i></button>
+                                        <button id="cheerleader-prompt-delete" class="menu_button" title="Delete Selected"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
                                 </div>
 
                                 <div class="cheerleader-section">
                                     <label>Main Prompt <span class="cheerleader-tooltip" title="System instructions for the hype bot">?</span></label>
                                     <textarea id="cheerleader-main-prompt" class="text_pole" rows="4" placeholder="You are a hype-bot..."></textarea>
-                                    <div class="cheerleader-row" style="justify-content:flex-end">
-                                        <button id="cheerleader-save-to-library" class="menu_button menu_button_icon" title="Save current prompt to library"><i class="fa-solid fa-bookmark"></i> Save to Library</button>
-                                    </div>
                                 </div>
 
                                 <div class="cheerleader-section">
@@ -1848,7 +1933,12 @@
                                     <textarea id="cheerleader-prefill" class="text_pole" rows="2" placeholder="Wow, that's intense!"></textarea>
                                 </div>
 
-                                <div class="cheerleader-row">
+                                <div class="cheerleader-row" style="gap:8px">
+                                    <button id="cheerleader-save-to-library" class="menu_button" style="flex:1" title="Save current prompt to library"><i class="fa-solid fa-bookmark"></i> Save to Library</button>
+                                    <button id="cheerleader-prompt-new" class="menu_button" style="flex:1" title="Create new from scratch"><i class="fa-solid fa-plus"></i> New Prompt</button>
+                                </div>
+
+                                <div class="cheerleader-row" style="margin-top:12px">
                                     <div class="cheerleader-section" style="flex:1">
                                         <label>Max Context</label>
                                         <input id="cheerleader-max-context" class="text_pole" type="number" value="4096">
@@ -1857,42 +1947,6 @@
                                         <label>Max Response</label>
                                         <input id="cheerleader-max-response" class="text_pole" type="number" value="200">
                                     </div>
-                                </div>
-
-                                <div class="cheerleader-section">
-                                    <label>Avatar</label>
-                                    <div class="cheerleader-row">
-                                        <img id="cheerleader-avatar-preview" class="cheerleader-avatar-preview">
-                                        <input id="cheerleader-avatar" class="text_pole" type="text" placeholder="URL or Browse">
-                                        <button id="cheerleader-avatar-browse" class="menu_button" title="Browse for Image"><i class="fa-solid fa-folder-open"></i></button>
-                                        <button id="cheerleader-avatar-clear" class="menu_button" title="Clear Avatar"><i class="fa-solid fa-times"></i></button>
-                                    </div>
-                                    <input type="file" id="cheerleader-avatar-file" accept="image/*" style="display:none">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Prompt Library Drawer -->
-                    <div class="cheerleader-drawer">
-                        <div class="inline-drawer">
-                            <div class="inline-drawer-toggle inline-drawer-header">
-                                <b>Prompt Library</b>
-                                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
-                            </div>
-                            <div class="inline-drawer-content">
-                                <div class="cheerleader-section">
-                                    <label>Saved Prompts <span class="cheerleader-tooltip" title="Your collection of reusable prompt templates">?</span></label>
-                                    <div class="cheerleader-row">
-                                        <select id="cheerleader-prompt-library-select" class="text_pole"></select>
-                                        <button id="cheerleader-prompt-load" class="menu_button" title="Load into Current Persona"><i class="fa-solid fa-download"></i></button>
-                                        <button id="cheerleader-prompt-edit" class="menu_button" title="Edit Prompt"><i class="fa-solid fa-pen"></i></button>
-                                        <button id="cheerleader-prompt-delete" class="menu_button" title="Delete Prompt"><i class="fa-solid fa-trash"></i></button>
-                                    </div>
-                                    <div id="cheerleader-prompt-preview" class="cheerleader-prompt-preview"></div>
-                                </div>
-                                <div class="cheerleader-section">
-                                    <button id="cheerleader-prompt-new" class="menu_button cheerleader-full-width"><i class="fa-solid fa-plus"></i> Create New Prompt Template</button>
                                 </div>
                             </div>
                         </div>
@@ -2099,6 +2153,25 @@
         #close-cheerleader-bar { cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
         #close-cheerleader-bar:hover { opacity: 1; }
         #cheerleader-output-content { font-style: italic; }
+
+        /* Floating output bar styles */
+        .cheerleader-floating { box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+        .cheerleader-floating .cheerleader-header { cursor: move; user-select: none; }
+        .cheerleader-floating #cheerleader-output-content { flex: 1; overflow: auto; }
+        .cheerleader-resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 16px;
+            height: 16px;
+            cursor: se-resize;
+            background: linear-gradient(135deg, transparent 50%, var(--SmartThemeBorderColor) 50%);
+            border-radius: 0 0 10px 0;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .cheerleader-resize-handle:hover { opacity: 1; }
+
         .cheerleader-tooltip { cursor: help; color: var(--SmartThemeQuoteColor); margin-left: 4px; font-size: 0.85em; }
         .cheerleader-cooldown-indicator { font-size: 0.85em; color: var(--SmartThemeQuoteColor); padding: 4px 8px; background: var(--SmartThemeBlurTintColor); border-radius: 4px; margin-top: 5px; }
         .cheerleader-danger { background: rgba(200, 50, 50, 0.3) !important; }
@@ -2124,39 +2197,34 @@
         .cheerleader-history-time { font-size: 0.8em; opacity: 0.7; }
         .cheerleader-history-text { font-style: italic; }
 
-        /* Prompt Library styles */
-        .cheerleader-prompt-preview {
-            margin-top: 10px;
-            padding: 10px;
-            background: var(--SmartThemeBlurTintColor);
-            border: 1px solid var(--SmartThemeBorderColor);
-            border-radius: 6px;
-            font-size: 0.9em;
-            max-height: 150px;
-            overflow-y: auto;
-            display: none;
-        }
-        .cheerleader-prompt-preview.visible { display: block; }
-        .cheerleader-prompt-preview-label { font-weight: bold; color: var(--SmartThemeQuoteColor); margin-bottom: 4px; }
-        .cheerleader-prompt-preview-text { white-space: pre-wrap; word-break: break-word; }
-        .cheerleader-prompt-preview-desc { font-style: italic; color: var(--SmartThemeQuoteColor); margin-bottom: 8px; }
-
         /* Prompt Editor Popup */
         #cheerleader-prompt-editor-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; }
         #cheerleader-prompt-editor-popup {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: var(--SmartThemeBodyColor); border: 2px solid var(--SmartThemeBorderColor);
-            border-radius: 10px; padding: 20px; width: 90%; max-width: 600px; max-height: 80vh; z-index: 9999;
-            overflow-y: auto;
+            background: var(--SmartThemeBlurTintColor); border: 2px solid var(--SmartThemeBorderColor);
+            border-radius: 10px; padding: 24px; width: 90%; max-width: 550px; max-height: 80vh; z-index: 9999;
+            overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
-        .cheerleader-editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .cheerleader-editor-header h3 { margin: 0; color: gold; }
-        #close-prompt-editor { cursor: pointer; font-size: 1.5em; opacity: 0.7; transition: opacity 0.2s; }
-        #close-prompt-editor:hover { opacity: 1; }
-        .cheerleader-editor-section { margin-bottom: 15px; }
-        .cheerleader-editor-section label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .cheerleader-editor-section input, .cheerleader-editor-section textarea { width: 100%; box-sizing: border-box; }
-        .cheerleader-editor-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+        .cheerleader-editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--SmartThemeBorderColor); }
+        .cheerleader-editor-header h3 { margin: 0; color: var(--SmartThemeQuoteColor); font-size: 1.2em; }
+        #close-prompt-editor { cursor: pointer; font-size: 1.3em; opacity: 0.6; transition: opacity 0.2s, transform 0.2s; padding: 4px; }
+        #close-prompt-editor:hover { opacity: 1; transform: scale(1.1); }
+        .cheerleader-editor-section { margin-bottom: 18px; }
+        .cheerleader-editor-section label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9em; color: var(--SmartThemeBodyColor); text-shadow: none; }
+        .cheerleader-editor-section input, .cheerleader-editor-section textarea {
+            width: 100%; box-sizing: border-box;
+            background: var(--SmartThemeBlurTintColor); border: 1px solid var(--SmartThemeBorderColor);
+            border-radius: 6px; padding: 10px 12px; color: var(--SmartThemeBodyColor);
+            font-size: 0.95em; transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .cheerleader-editor-section input:focus, .cheerleader-editor-section textarea:focus {
+            outline: none; border-color: var(--SmartThemeQuoteColor); box-shadow: 0 0 0 2px rgba(255,215,0,0.15);
+        }
+        .cheerleader-editor-section input::placeholder, .cheerleader-editor-section textarea::placeholder {
+            color: var(--SmartThemeBodyColor); opacity: 0.5;
+        }
+        .cheerleader-editor-section textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+        .cheerleader-editor-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--SmartThemeBorderColor); }
 
         /* Prompt Structure Editor styles */
         .cheerleader-info-box {
