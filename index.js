@@ -139,45 +139,8 @@
             #cheerleader-output-content {
                 font-size: 0.95em;
             }
-        `,
-        "Bubble": `
-            #cheerleader-output-bar {
-                margin: 10px 20px 20px 20px;
-                padding: 12px 18px;
-                background: var(--SmartThemeBlurTintColor);
-                border: none;
-                border-radius: 20px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-                position: relative;
-                overflow: visible !important;
-            }
-            #cheerleader-output-bar::after {
-                content: '';
-                position: absolute;
-                bottom: -10px;
-                left: 25px;
-                width: 0;
-                height: 0;
-                border-style: solid;
-                border-width: 12px 10px 0 10px;
-                border-color: var(--SmartThemeBlurTintColor) transparent transparent transparent;
-                filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
-            }
-            #cheerleader-avatar {
-                height: 36px;
-                width: 36px;
-                object-fit: contain;
-                margin-right: 10px;
-                border-radius: 50%;
-                background: transparent;
-            }
-            #cheerleader-avatar-emoji {
-                margin-right: 8px;
-                font-size: 1.3em;
-            }
-            .cheerleader-header {
-                color: var(--SmartThemeQuoteColor);
-            }
+        `
+    };
         `
     };
 

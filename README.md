@@ -91,7 +91,6 @@ Built-in themes:
 - **Default** - Clean, matches SillyTavern's theme
 - **Neon Glow** - Cyberpunk-style with glowing borders
 - **Compact** - Minimal, space-saving design
-- **Bubble** - Speech bubble style with tail
 
 You can also create and save custom CSS presets.
 
