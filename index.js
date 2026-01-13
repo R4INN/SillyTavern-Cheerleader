@@ -227,24 +227,6 @@
             cssPresets: {},
 
             // Prompt Library
-            promptLibrary: {
-                "Default Hype Bot": {
-                    mainPrompt: DEFAULTS.MAIN_PROMPT,
-                    prefill: DEFAULTS.PREFILL,
-                    description: "The default cheerleader prompt"
-                },
-                "Sarcastic Commentator": {
-                    mainPrompt: "You are a sarcastic commentator. Make a short, witty, slightly snarky comment on the current story. Keep it brief (1-2 sentences). Be funny but not mean.",
-                    prefill: "Oh, how interesting...",
-                    description: "A sarcastic take on the roleplay"
-                },
-                "Dramatic Narrator": {
-                    mainPrompt: "You are a dramatic narrator. Make a short, theatrical comment on the current story as if narrating an epic tale. Keep it brief (1-2 sentences). Be dramatic and cinematic.",
-                    prefill: "And so it came to pass...",
-                    description: "Epic dramatic narration style"
-                }
-            },
-
             // Presets
             presets: {
                 "Default": {
@@ -299,9 +281,6 @@
         if (settings.autoDismissSeconds === undefined) settings.autoDismissSeconds = DEFAULTS.AUTO_DISMISS;
         if (settings.outputPosition === undefined) settings.outputPosition = DEFAULTS.OUTPUT_POSITION;
         if (settings.keyboardShortcutEnabled === undefined) settings.keyboardShortcutEnabled = DEFAULTS.KEYBOARD_SHORTCUT;
-        if (!settings.promptLibrary) {
-            settings.promptLibrary = getDefaultSettings().promptLibrary;
-        }
         if (!settings.promptTemplate) {
             settings.promptTemplate = DEFAULTS.PROMPT_TEMPLATE;
         }
@@ -1025,9 +1004,8 @@
         updateCSSDropdown();
         applyCSSPreset();
 
-        // Presets & Library
+        // Presets
         updatePresetDropdown();
-        updatePromptLibraryDropdown();
         
         // Prompt template
         $('#cheerleader-prompt-template').val(s.promptTemplate || DEFAULTS.PROMPT_TEMPLATE);
@@ -1045,159 +1023,6 @@
 
         $select.val(s.activePreset || "Default");
         $('#cheerleader-delete-preset').prop('disabled', s.activePreset === "Default");
-    }
-
-    function updatePromptLibraryDropdown() {
-        const s = getSettings();
-        const $select = $('#cheerleader-prompt-library-select').empty();
-
-        if (s.promptLibrary) {
-            Object.keys(s.promptLibrary).sort().forEach(name => {
-                $select.append($('<option>', { value: name, text: name }));
-            });
-        }
-    }
-
-    function showPromptEditorPopup(editName = null) {
-        const s = getSettings();
-        const isEdit = editName !== null;
-        const existingPrompt = isEdit ? s.promptLibrary?.[editName] : null;
-
-        const html = `
-            <div id="cheerleader-prompt-editor-overlay"></div>
-            <div id="cheerleader-prompt-editor-popup">
-                <div class="cheerleader-editor-header">
-                    <h3>${isEdit ? 'Edit' : 'New'} Prompt Template</h3>
-                    <span id="close-prompt-editor">✕</span>
-                </div>
-                <div class="cheerleader-editor-section">
-                    <label>Template Name</label>
-                    <input id="prompt-editor-name" class="text_pole" type="text" value="${isEdit ? editName : ''}" placeholder="My Custom Prompt" ${isEdit ? 'readonly style="opacity:0.7"' : ''}>
-                </div>
-                <div class="cheerleader-editor-section">
-                    <label>Description (optional)</label>
-                    <input id="prompt-editor-description" class="text_pole" type="text" value="${existingPrompt?.description || ''}" placeholder="Brief description of this prompt style">
-                </div>
-                <div class="cheerleader-editor-section">
-                    <label>Main Prompt</label>
-                    <textarea id="prompt-editor-main" class="text_pole" rows="6" placeholder="You are a hype-bot...">${existingPrompt?.mainPrompt || ''}</textarea>
-                </div>
-                <div class="cheerleader-editor-section">
-                    <label>Prefill (optional)</label>
-                    <textarea id="prompt-editor-prefill" class="text_pole" rows="2" placeholder="Starting text for AI response">${existingPrompt?.prefill || ''}</textarea>
-                </div>
-                <div class="cheerleader-editor-actions">
-                    <button id="prompt-editor-cancel" class="menu_button">Cancel</button>
-                    <button id="prompt-editor-save" class="menu_button menu_button_icon"><i class="fa-solid fa-save"></i> Save</button>
-                </div>
-            </div>
-        `;
-
-        $('body').append(html);
-
-        // Focus the name field for new prompts
-        if (!isEdit) {
-            $('#prompt-editor-name').focus();
-        }
-
-        // Bind events
-        const closePopup = () => {
-            $('#cheerleader-prompt-editor-popup, #cheerleader-prompt-editor-overlay').remove();
-        };
-
-        $('#close-prompt-editor, #prompt-editor-cancel, #cheerleader-prompt-editor-overlay').on('click', closePopup);
-
-        $('#prompt-editor-save').on('click', () => {
-            const name = $('#prompt-editor-name').val().trim();
-            const mainPrompt = $('#prompt-editor-main').val().trim();
-            const prefill = $('#prompt-editor-prefill').val().trim();
-            const description = $('#prompt-editor-description').val().trim();
-
-            if (!name) {
-                toastr.error('Please enter a template name');
-                return;
-            }
-
-            if (!mainPrompt) {
-                toastr.error('Please enter a main prompt');
-                return;
-            }
-
-            // Check for duplicate name (only for new prompts)
-            if (!isEdit && s.promptLibrary?.[name]) {
-                toastr.error('A prompt with this name already exists');
-                return;
-            }
-
-            s.promptLibrary = s.promptLibrary || {};
-            s.promptLibrary[name] = {
-                mainPrompt: mainPrompt,
-                prefill: prefill,
-                description: description
-            };
-
-            saveSettings();
-            updatePromptLibraryDropdown();
-            $('#cheerleader-prompt-library-select').val(name);
-
-            toastr.success(isEdit ? 'Prompt updated!' : 'Prompt saved to library!');
-            closePopup();
-        });
-
-        // Handle Enter key in name field
-        $('#prompt-editor-name').on('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                $('#prompt-editor-main').focus();
-            }
-        });
-    }
-
-    function loadPromptFromLibrary(name) {
-        const s = getSettings();
-        const prompt = s.promptLibrary?.[name];
-        if (!prompt) return;
-
-        s.mainPrompt = prompt.mainPrompt;
-        if (prompt.prefill) {
-            s.prefill = prompt.prefill;
-        }
-
-        saveSettings();
-        updateUI();
-        toastr.success(`Loaded prompt: ${name}`);
-    }
-
-    function deletePromptFromLibrary(name) {
-        if (!confirm(`Delete prompt template: ${name}?`)) return;
-
-        const s = getSettings();
-        delete s.promptLibrary?.[name];
-        saveSettings();
-        updatePromptLibraryDropdown();
-        toastr.success('Prompt deleted');
-    }
-
-    function saveCurrentPromptToLibrary() {
-        const s = getSettings();
-        const name = prompt('Save prompt as:', s.charName + ' Prompt');
-        if (!name) return;
-
-        if (s.promptLibrary?.[name]) {
-            if (!confirm(`Overwrite existing prompt "${name}"?`)) return;
-        }
-
-        s.promptLibrary = s.promptLibrary || {};
-        s.promptLibrary[name] = {
-            mainPrompt: s.mainPrompt || DEFAULTS.MAIN_PROMPT,
-            prefill: s.prefill || '',
-            description: `Saved from ${s.charName}`
-        };
-
-        saveSettings();
-        updatePromptLibraryDropdown();
-        $('#cheerleader-prompt-library-select').val(name);
-        toastr.success(`Saved prompt: ${name}`);
     }
 
     function updateCooldownIndicator() {
@@ -1524,18 +1349,6 @@
         $doc.on('click', '#cheerleader-save-preset', saveCurrentToPreset);
         $doc.on('click', '#cheerleader-delete-preset', deleteCurrentPreset);
         $doc.on('click', '#cheerleader-factory-reset', resetToFactory);
-
-        // Prompt Library
-        $doc.on('click', '#cheerleader-prompt-load', () => {
-            const name = $('#cheerleader-prompt-library-select').val();
-            if (name) loadPromptFromLibrary(name);
-        });
-        $doc.on('click', '#cheerleader-prompt-delete', () => {
-            const name = $('#cheerleader-prompt-library-select').val();
-            if (name) deletePromptFromLibrary(name);
-        });
-        $doc.on('click', '#cheerleader-prompt-new', () => showPromptEditorPopup());
-        $doc.on('click', '#cheerleader-save-to-library', saveCurrentPromptToLibrary);
 
         // Export/Import
         $doc.on('click', '#cheerleader-export', exportSettings);
@@ -1883,15 +1696,6 @@
                                 </div>
 
                                 <div class="cheerleader-section">
-                                    <label>Prompt Template <span class="cheerleader-tooltip" title="Load a saved prompt or create your own">?</span></label>
-                                    <div class="cheerleader-row">
-                                        <select id="cheerleader-prompt-library-select" class="text_pole" style="flex:1"></select>
-                                        <button id="cheerleader-prompt-load" class="menu_button" title="Load Selected Prompt"><i class="fa-solid fa-download"></i></button>
-                                        <button id="cheerleader-prompt-delete" class="menu_button" title="Delete Selected"><i class="fa-solid fa-trash"></i></button>
-                                    </div>
-                                </div>
-
-                                <div class="cheerleader-section">
                                     <label>Main Prompt <span class="cheerleader-tooltip" title="System instructions for the hype bot">?</span></label>
                                     <textarea id="cheerleader-main-prompt" class="text_pole" rows="4" placeholder="You are a hype-bot..."></textarea>
                                 </div>
@@ -1899,11 +1703,6 @@
                                 <div class="cheerleader-section">
                                     <label>Prefill <span class="cheerleader-tooltip" title="Starting text for the AI response (will be stripped from output)">?</span></label>
                                     <textarea id="cheerleader-prefill" class="text_pole" rows="2" placeholder="Wow, that's intense!"></textarea>
-                                </div>
-
-                                <div class="cheerleader-row" style="gap:8px">
-                                    <button id="cheerleader-save-to-library" class="menu_button" style="flex:1" title="Save current prompt to library"><i class="fa-solid fa-bookmark"></i> Save to Library</button>
-                                    <button id="cheerleader-prompt-new" class="menu_button" style="flex:1" title="Create new from scratch"><i class="fa-solid fa-plus"></i> New Prompt</button>
                                 </div>
 
                                 <div class="cheerleader-row" style="margin-top:12px">
