@@ -141,8 +141,6 @@
             }
         `
     };
-        `
-    };
 
     // ═══════════════════════════════════════════════════════════════════════════
     // STATE MANAGEMENT
@@ -186,9 +184,13 @@
     function stripXmlTags(text) {
         if (!text) return text;
         return text
-            .replace(/<(\w+)(?:\s+[^>]*)?>[\s\S]*?<\/\1>/gi, '')
-            .replace(/<[^>]+\/>/gi, '')
-            .replace(/<\/?[\w]+[^>]*>/gi, '')
+            // Remove content of specific tags (reasoning, hidden, scripts)
+            .replace(/<(think|script|style|hidden)(?:\s+[^>]*)?>[\s\S]*?<\/\1>/gi, '')
+            // Replace breaks with newlines
+            .replace(/<br\s*\/?>/gi, '\n')
+            // Remove all other tags but keep content
+            .replace(/<[^>]+>/g, '')
+            // Normalize newlines
             .replace(/\n{3,}/g, '\n\n')
             .trim();
     }
@@ -754,9 +756,14 @@
         // Chat history (will be handled specially)
         const chatHistory = [];
         if (ctx.chat?.length) {
-            for (const msg of ctx.chat) {
+            // Optimization: Only process last 50 messages to prevent lag in long chats
+            // This is usually enough for the hype bot context window
+            const startIdx = Math.max(0, ctx.chat.length - 50);
+            const recentChat = ctx.chat.slice(startIdx);
+
+            for (const msg of recentChat) {
                 if (msg.is_system) continue;
-                let content = stripXmlTags(msg.mes || "").replace(/<br\s*\/?>/gi, '\n');
+                let content = stripXmlTags(msg.mes || "");
                 if (!content.trim()) continue;
                 const speaker = msg.is_user ? userName : charName;
                 chatHistory.push({ 
