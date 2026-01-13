@@ -142,24 +142,26 @@
         `,
         "Bubble": `
             #cheerleader-output-bar {
-                margin: 10px 20px;
+                margin: 10px 20px 20px 20px;
                 padding: 12px 18px;
                 background: var(--SmartThemeBlurTintColor);
                 border: none;
                 border-radius: 20px;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.2);
                 position: relative;
+                overflow: visible !important;
             }
-            #cheerleader-output-bar::before {
+            #cheerleader-output-bar::after {
                 content: '';
                 position: absolute;
-                bottom: -8px;
-                left: 30px;
+                bottom: -10px;
+                left: 25px;
                 width: 0;
                 height: 0;
-                border-left: 10px solid transparent;
-                border-right: 10px solid transparent;
-                border-top: 10px solid var(--SmartThemeBlurTintColor);
+                border-style: solid;
+                border-width: 12px 10px 0 10px;
+                border-color: var(--SmartThemeBlurTintColor) transparent transparent transparent;
+                filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
             }
             #cheerleader-avatar {
                 height: 36px;
@@ -172,6 +174,9 @@
             #cheerleader-avatar-emoji {
                 margin-right: 8px;
                 font-size: 1.3em;
+            }
+            .cheerleader-header {
+                color: var(--SmartThemeQuoteColor);
             }
         `
     };
@@ -450,9 +455,9 @@
         const settings = getSettings();
         $('#cheerleader-custom-style').remove();
 
-        if (settings.useCustomCSS && settings.selectedCSSPreset) {
-            $('<style id="cheerleader-custom-style">').text(getCSS(settings.selectedCSSPreset)).appendTo('head');
-        }
+        // Always apply the selected CSS preset
+        const presetName = settings.selectedCSSPreset || 'Default';
+        $('<style id="cheerleader-custom-style">').text(getCSS(presetName)).appendTo('head');
     }
 
     function updateCSSDropdown() {
@@ -469,7 +474,17 @@
             });
         }
 
-        $select.val(settings.selectedCSSPreset || 'Default');
+        const currentPreset = settings.selectedCSSPreset || 'Default';
+        $select.val(currentPreset);
+
+        // Show editor with current preset
+        $('#cheerleader-css-editor-section').show();
+        $('#cheerleader-css-editor').val(getCSS(currentPreset));
+        const builtin = isBuiltinCSS(currentPreset);
+        $('#cheerleader-css-editor').prop('readonly', builtin);
+        $('#cheerleader-css-readonly-badge').toggle(builtin);
+        $('#cheerleader-css-save').toggle(!builtin);
+        $('#cheerleader-css-delete').prop('disabled', builtin);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -635,28 +650,18 @@
             avatarUrl = 'file:///' + avatarUrl.replace(/\\/g, '/');
         }
 
-        const useCSS = settings.useCustomCSS;
         let avatarHtml;
 
         if (avatarUrl) {
-            const style = useCSS ? '' : 'style="height:40px;width:40px;object-fit:contain;margin-right:10px;border-radius:4px;background:transparent"';
-            avatarHtml = `<img id="cheerleader-avatar" src="${avatarUrl}" ${style} onerror="this.style.display='none'">`;
+            avatarHtml = `<img id="cheerleader-avatar" src="${avatarUrl}" onerror="this.style.display='none'">`;
         } else {
-            const style = useCSS ? '' : 'style="margin-right:8px;font-size:1.5em"';
-            avatarHtml = `<span id="cheerleader-avatar-emoji" ${style}>🎉</span>`;
+            avatarHtml = `<span id="cheerleader-avatar-emoji">🎉</span>`;
         }
 
         let $bar = $('#cheerleader-output-bar');
 
         if ($bar.length === 0) {
-            const inlineStyles = useCSS ? { display: 'none' } : {
-                margin: '10px', padding: '15px',
-                backgroundColor: 'var(--SmartThemeBlurTintColor)',
-                border: '1px solid var(--SmartThemeBorderColor)',
-                borderRadius: '10px', display: 'none'
-            };
-
-            $bar = $('<div id="cheerleader-output-bar">').css(inlineStyles).html(`
+            $bar = $('<div id="cheerleader-output-bar">').css('display', 'none').html(`
                 <div class="cheerleader-header">
                     <span id="cheerleader-header">${avatarHtml}<span id="cheerleader-name">${charName}</span></span>
                     <span id="close-cheerleader-bar" title="Close (Esc)">✕</span>
@@ -1047,8 +1052,6 @@
         updateCooldownIndicator();
 
         // CSS
-        $('#cheerleader-use-custom-css').prop('checked', s.useCustomCSS);
-        $('#cheerleader-css-options').toggle(!!s.useCustomCSS);
         updateCSSDropdown();
         applyCSSPreset();
 
@@ -1594,21 +1597,16 @@
 
         $doc.on('click', '#cheerleader-view-history', showHistoryPopup);
 
-        // Custom CSS
-        $doc.on('change', '#cheerleader-use-custom-css', function () {
-            const enabled = this.checked;
-            getSettings().useCustomCSS = enabled;
-            saveSettings();
-            $('#cheerleader-css-options').toggle(enabled);
-            applyCSSPreset();
-        });
-
+        // CSS Presets
         $doc.on('change', '#cheerleader-css-preset-select', function () {
             const name = this.value;
             const s = getSettings();
             s.selectedCSSPreset = name;
             saveSettings();
             applyCSSPreset();
+
+            // Remove existing output bar so it uses new styles
+            $('#cheerleader-output-bar').remove();
 
             $('#cheerleader-css-editor-section').show();
             $('#cheerleader-css-editor').val(getCSS(name));
@@ -2088,30 +2086,22 @@
                     <div class="cheerleader-drawer">
                         <div class="inline-drawer">
                             <div class="inline-drawer-toggle inline-drawer-header">
-                                <b>Custom CSS</b>
+                                <b>Theme</b>
                                 <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
                             </div>
                             <div class="inline-drawer-content">
                                 <div class="cheerleader-section">
-                                    <label class="checkbox_label">
-                                        <input type="checkbox" id="cheerleader-use-custom-css">
-                                        Use Custom CSS
-                                    </label>
-                                    <div id="cheerleader-css-options" style="display:none">
-                                        <div class="cheerleader-section">
-                                            <label>CSS Preset</label>
-                                            <div class="cheerleader-row">
-                                                <select id="cheerleader-css-preset-select" class="text_pole"></select>
-                                                <button id="cheerleader-css-new" class="menu_button" title="New CSS Preset"><i class="fa-solid fa-plus"></i></button>
-                                                <button id="cheerleader-css-delete" class="menu_button" title="Delete CSS Preset"><i class="fa-solid fa-trash"></i></button>
-                                            </div>
-                                        </div>
-                                        <div id="cheerleader-css-editor-section" style="display:none">
-                                            <label>CSS Editor <span id="cheerleader-css-readonly-badge" class="readonly-badge">(read-only)</span></label>
-                                            <textarea id="cheerleader-css-editor" class="text_pole cheerleader-code" rows="8"></textarea>
-                                            <button id="cheerleader-css-save" class="menu_button cheerleader-full-width">Save CSS</button>
-                                        </div>
+                                    <label>CSS Preset</label>
+                                    <div class="cheerleader-row">
+                                        <select id="cheerleader-css-preset-select" class="text_pole"></select>
+                                        <button id="cheerleader-css-new" class="menu_button" title="New CSS Preset"><i class="fa-solid fa-plus"></i></button>
+                                        <button id="cheerleader-css-delete" class="menu_button" title="Delete CSS Preset"><i class="fa-solid fa-trash"></i></button>
                                     </div>
+                                </div>
+                                <div id="cheerleader-css-editor-section" style="display:none">
+                                    <label>CSS Editor <span id="cheerleader-css-readonly-badge" class="readonly-badge">(read-only)</span></label>
+                                    <textarea id="cheerleader-css-editor" class="text_pole cheerleader-code" rows="8"></textarea>
+                                    <button id="cheerleader-css-save" class="menu_button cheerleader-full-width">Save CSS</button>
                                 </div>
                             </div>
                         </div>
