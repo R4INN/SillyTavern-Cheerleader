@@ -1,7 +1,9 @@
-// SillyTavern Cheerleader Extension v2.0.0 - Completely Revamped
+// SillyTavern Cheerleader Extension v3.0.0 - Major Feature Update
 // Author: Antigravity
 // Features: Multiple personas, keyboard shortcuts, loading states, cooldown indicators,
-//           export/import, auto-dismiss, optimized performance
+//           export/import, auto-dismiss, optimized performance, typing animation,
+//           confetti effects, streak counter, slash commands, quick reactions,
+//           statistics dashboard, mood detection, 7 CSS themes
 
 (function () {
     'use strict';
@@ -27,6 +29,11 @@
         AUTO_DISMISS: 0,
         OUTPUT_POSITION: "after_chat",
         KEYBOARD_SHORTCUT: true,
+        TYPING_ANIMATION: true,
+        TYPING_SPEED: 30,
+        CONFETTI_ENABLED: true,
+        REACTIONS_ENABLED: true,
+        MOOD_DETECTION: true,
         PROMPT_TEMPLATE: `[
   {
     "role": "system",
@@ -139,6 +146,169 @@
             #cheerleader-output-content {
                 font-size: 0.95em;
             }
+        `,
+        "Pastel Dream": `
+            #cheerleader-output-bar {
+                margin: 10px;
+                padding: 16px 20px;
+                background: linear-gradient(135deg, rgba(255,182,193,0.25) 0%, rgba(186,225,255,0.25) 50%, rgba(221,190,255,0.25) 100%);
+                border: 1px solid rgba(221,190,255,0.4);
+                border-radius: 16px;
+                backdrop-filter: blur(8px);
+            }
+            #cheerleader-avatar {
+                height: 44px;
+                width: 44px;
+                object-fit: contain;
+                margin-right: 12px;
+                border-radius: 50%;
+                border: 2px solid rgba(221,190,255,0.6);
+                background: transparent;
+            }
+            #cheerleader-avatar-emoji {
+                margin-right: 10px;
+                font-size: 1.8em;
+            }
+            #cheerleader-name {
+                color: #d4a0d4 !important;
+                font-weight: 600;
+            }
+            #cheerleader-output-content {
+                color: #e8d5e8;
+            }
+            .cheerleader-header {
+                color: #c9a0dc !important;
+            }
+        `,
+        "Dark Hacker": `
+            #cheerleader-output-bar {
+                margin: 10px;
+                padding: 14px 18px;
+                background: rgba(0, 10, 0, 0.9);
+                border: 1px solid #00ff41;
+                border-radius: 4px;
+                font-family: 'Consolas', 'Courier New', monospace;
+                box-shadow: 0 0 10px rgba(0,255,65,0.15), inset 0 0 40px rgba(0,255,65,0.03);
+            }
+            #cheerleader-avatar {
+                height: 36px;
+                width: 36px;
+                object-fit: contain;
+                margin-right: 10px;
+                border-radius: 2px;
+                border: 1px solid #00ff41;
+                filter: saturate(0) brightness(1.5) sepia(1) hue-rotate(70deg) saturate(4);
+                background: transparent;
+            }
+            #cheerleader-avatar-emoji {
+                margin-right: 10px;
+                font-size: 1.5em;
+                filter: saturate(0) brightness(2);
+            }
+            #cheerleader-name {
+                color: #00ff41 !important;
+                text-shadow: 0 0 8px rgba(0,255,65,0.6);
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                font-size: 0.85em;
+            }
+            #cheerleader-output-content {
+                color: #00cc33;
+                text-shadow: 0 0 4px rgba(0,255,65,0.3);
+                letter-spacing: 0.5px;
+            }
+            .cheerleader-header {
+                color: #00ff41 !important;
+                border-bottom: 1px solid rgba(0,255,65,0.2);
+                padding-bottom: 8px;
+            }
+            #close-cheerleader-bar {
+                color: #00ff41 !important;
+            }
+        `,
+        "Sunset Warm": `
+            #cheerleader-output-bar {
+                margin: 10px;
+                padding: 16px 20px;
+                background: linear-gradient(135deg, rgba(255,94,58,0.2) 0%, rgba(255,149,0,0.15) 50%, rgba(255,204,0,0.1) 100%);
+                border: 1px solid rgba(255,149,0,0.4);
+                border-radius: 12px;
+                box-shadow: 0 4px 15px rgba(255,94,58,0.1);
+            }
+            #cheerleader-avatar {
+                height: 44px;
+                width: 44px;
+                object-fit: contain;
+                margin-right: 12px;
+                border-radius: 10px;
+                border: 2px solid rgba(255,149,0,0.5);
+                box-shadow: 0 2px 8px rgba(255,94,58,0.2);
+                background: transparent;
+            }
+            #cheerleader-avatar-emoji {
+                margin-right: 10px;
+                font-size: 1.8em;
+                filter: drop-shadow(0 2px 4px rgba(255,94,58,0.4));
+            }
+            #cheerleader-name {
+                color: #ff9500 !important;
+                text-shadow: 0 1px 3px rgba(255,94,58,0.3);
+            }
+            #cheerleader-output-content {
+                color: #ffe0cc;
+            }
+            .cheerleader-header {
+                color: #ffcc00 !important;
+            }
+        `,
+        "Retro Arcade": `
+            #cheerleader-output-bar {
+                margin: 10px;
+                padding: 14px 18px;
+                background: linear-gradient(180deg, rgba(20,0,40,0.95) 0%, rgba(40,0,60,0.9) 100%);
+                border: 2px solid #ff00ff;
+                border-radius: 8px;
+                box-shadow: 0 0 15px rgba(255,0,255,0.3), 0 0 30px rgba(0,255,255,0.1), inset 0 0 20px rgba(255,0,255,0.05);
+                image-rendering: pixelated;
+            }
+            #cheerleader-avatar {
+                height: 42px;
+                width: 42px;
+                object-fit: contain;
+                margin-right: 12px;
+                border-radius: 6px;
+                border: 2px solid #00ffff;
+                box-shadow: 0 0 8px rgba(0,255,255,0.5);
+                background: transparent;
+            }
+            #cheerleader-avatar-emoji {
+                margin-right: 10px;
+                font-size: 1.8em;
+                filter: drop-shadow(0 0 5px #ff00ff);
+                animation: cheerleader-arcade-bounce 0.6s ease-in-out infinite alternate;
+            }
+            @keyframes cheerleader-arcade-bounce {
+                from { transform: translateY(0); }
+                to { transform: translateY(-3px); }
+            }
+            #cheerleader-name {
+                color: #ff00ff !important;
+                text-shadow: 0 0 10px #ff00ff, 0 0 20px rgba(255,0,255,0.5);
+                text-transform: uppercase;
+                letter-spacing: 3px;
+                font-size: 0.9em;
+            }
+            #cheerleader-output-content {
+                color: #00ffff;
+                text-shadow: 0 0 4px rgba(0,255,255,0.4);
+            }
+            .cheerleader-header {
+                color: #ff00ff !important;
+            }
+            #close-cheerleader-bar {
+                color: #00ffff !important;
+                text-shadow: 0 0 5px #00ffff;
+            }
         `
     };
 
@@ -152,9 +322,13 @@
         messagesSinceLastHype: 999,
         saveTimer: null,
         autoDismissTimer: null,
-        elements: {}, // Cached jQuery elements
+        typingTimer: null,
+        elements: {},
         buttonObserver: null,
-        activePersonaIndex: 0
+        activePersonaIndex: 0,
+        currentStreak: 0,
+        lastHypeTimestamp: 0,
+        streakTimeout: 5 * 60 * 1000
     };
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -220,6 +394,19 @@
             autoDismissSeconds: DEFAULTS.AUTO_DISMISS,
             outputPosition: DEFAULTS.OUTPUT_POSITION,
             keyboardShortcutEnabled: DEFAULTS.KEYBOARD_SHORTCUT,
+            typingAnimationEnabled: DEFAULTS.TYPING_ANIMATION,
+            typingSpeed: DEFAULTS.TYPING_SPEED,
+            confettiEnabled: DEFAULTS.CONFETTI_ENABLED,
+            reactionsEnabled: DEFAULTS.REACTIONS_ENABLED,
+            moodDetectionEnabled: DEFAULTS.MOOD_DETECTION,
+
+            // Statistics
+            stats: {
+                totalHypes: 0,
+                totalWords: 0,
+                longestStreak: 0,
+                reactions: {}
+            },
 
             // CSS settings
             useCustomCSS: false,
@@ -281,6 +468,12 @@
         if (settings.autoDismissSeconds === undefined) settings.autoDismissSeconds = DEFAULTS.AUTO_DISMISS;
         if (settings.outputPosition === undefined) settings.outputPosition = DEFAULTS.OUTPUT_POSITION;
         if (settings.keyboardShortcutEnabled === undefined) settings.keyboardShortcutEnabled = DEFAULTS.KEYBOARD_SHORTCUT;
+        if (settings.typingAnimationEnabled === undefined) settings.typingAnimationEnabled = DEFAULTS.TYPING_ANIMATION;
+        if (settings.typingSpeed === undefined) settings.typingSpeed = DEFAULTS.TYPING_SPEED;
+        if (settings.confettiEnabled === undefined) settings.confettiEnabled = DEFAULTS.CONFETTI_ENABLED;
+        if (settings.reactionsEnabled === undefined) settings.reactionsEnabled = DEFAULTS.REACTIONS_ENABLED;
+        if (settings.moodDetectionEnabled === undefined) settings.moodDetectionEnabled = DEFAULTS.MOOD_DETECTION;
+        if (!settings.stats) settings.stats = { totalHypes: 0, totalWords: 0, longestStreak: 0, reactions: {} };
         if (!settings.promptTemplate) {
             settings.promptTemplate = DEFAULTS.PROMPT_TEMPLATE;
         }
@@ -382,6 +575,221 @@
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // MOOD DETECTION
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    const MOOD_PATTERNS = {
+        excited: { keywords: ['amazing', 'incredible', 'wow', 'awesome', 'fantastic', 'epic', 'hype', 'fire', 'brilliant', 'perfect'], emoji: '🔥' },
+        funny: { keywords: ['haha', 'lol', 'funny', 'hilarious', 'lmao', 'joke', 'laugh', 'comedy', 'silly', 'ridiculous'], emoji: '😂' },
+        romantic: { keywords: ['love', 'kiss', 'heart', 'romantic', 'passion', 'blush', 'tender', 'sweet', 'embrace', 'adore'], emoji: '💕' },
+        dramatic: { keywords: ['dramatic', 'intense', 'suspense', 'tension', 'dramatic', 'gasp', 'shock', 'reveal', 'twist', 'cliffhanger'], emoji: '😱' },
+        sad: { keywords: ['sad', 'cry', 'tears', 'heartbreak', 'loss', 'grief', 'pain', 'sorry', 'tragic', 'melancholy'], emoji: '😢' },
+        angry: { keywords: ['angry', 'rage', 'furious', 'fight', 'battle', 'war', 'destroy', 'revenge', 'hate', 'fury'], emoji: '⚔️' },
+        mysterious: { keywords: ['mystery', 'secret', 'hidden', 'shadow', 'dark', 'unknown', 'enigma', 'whisper', 'lurk', 'strange'], emoji: '🔮' },
+        wholesome: { keywords: ['friend', 'kind', 'gentle', 'warm', 'comfort', 'safe', 'peace', 'happy', 'smile', 'together'], emoji: '🥰' }
+    };
+
+    function detectMood(text) {
+        if (!text) return null;
+        const lower = text.toLowerCase();
+        let bestMood = null;
+        let bestScore = 0;
+
+        for (const [mood, { keywords }] of Object.entries(MOOD_PATTERNS)) {
+            const score = keywords.reduce((acc, kw) => acc + (lower.includes(kw) ? 1 : 0), 0);
+            if (score > bestScore) {
+                bestScore = score;
+                bestMood = mood;
+            }
+        }
+
+        return bestScore > 0 ? bestMood : null;
+    }
+
+    function getMoodEmoji(mood) {
+        return MOOD_PATTERNS[mood]?.emoji || '🎉';
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // STREAK SYSTEM
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function updateStreak() {
+        const now = Date.now();
+        if (now - State.lastHypeTimestamp < State.streakTimeout) {
+            State.currentStreak++;
+        } else {
+            State.currentStreak = 1;
+        }
+        State.lastHypeTimestamp = now;
+
+        const settings = getSettings();
+        if (State.currentStreak > (settings.stats.longestStreak || 0)) {
+            settings.stats.longestStreak = State.currentStreak;
+            saveSettings();
+        }
+
+        return State.currentStreak;
+    }
+
+    function getStreakLabel(streak) {
+        if (streak >= 10) return { text: 'LEGENDARY', class: 'legendary' };
+        if (streak >= 7) return { text: 'ON FIRE', class: 'on-fire' };
+        if (streak >= 5) return { text: 'UNSTOPPABLE', class: 'unstoppable' };
+        if (streak >= 3) return { text: 'COMBO', class: 'combo' };
+        return null;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // STATISTICS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function updateStats(text) {
+        const settings = getSettings();
+        settings.stats.totalHypes = (settings.stats.totalHypes || 0) + 1;
+        settings.stats.totalWords = (settings.stats.totalWords || 0) + (text || '').split(/\s+/).filter(Boolean).length;
+        saveSettings();
+    }
+
+    function getStatsDisplay() {
+        const settings = getSettings();
+        const s = settings.stats || {};
+        const history = getHistoryStorage();
+        const chatCount = Object.keys(history).length;
+        const totalMessages = Object.values(history).reduce((acc, arr) => acc + arr.length, 0);
+        const avgWords = s.totalHypes > 0 ? Math.round((s.totalWords || 0) / s.totalHypes) : 0;
+
+        return {
+            totalHypes: s.totalHypes || 0,
+            totalWords: s.totalWords || 0,
+            avgWords,
+            longestStreak: s.longestStreak || 0,
+            currentStreak: State.currentStreak,
+            chatCount,
+            totalMessages,
+            topReactions: Object.entries(s.reactions || {})
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+        };
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TYPING ANIMATION
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function typeText($element, text, speed, callback) {
+        clearInterval(State.typingTimer);
+        $element.text('');
+        let i = 0;
+
+        $element.addClass('cheerleader-typing-active');
+
+        State.typingTimer = setInterval(() => {
+            if (i < text.length) {
+                $element.text(text.substring(0, i + 1));
+                i++;
+            } else {
+                clearInterval(State.typingTimer);
+                $element.removeClass('cheerleader-typing-active');
+                if (callback) callback();
+            }
+        }, speed);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CONFETTI EFFECT
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function spawnConfetti(targetElement) {
+        const $container = $('<div class="cheerleader-confetti-container"></div>');
+        const rect = targetElement ? targetElement.getBoundingClientRect() : { left: window.innerWidth / 2, top: window.innerHeight / 2 };
+        const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd', '#01a3a4', '#f368e0'];
+        const shapes = ['circle', 'square', 'triangle'];
+
+        $container.css({
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            width: '100vw',
+            height: '100vh',
+            pointerEvents: 'none',
+            zIndex: 99999,
+            overflow: 'hidden'
+        });
+
+        for (let i = 0; i < 40; i++) {
+            const $piece = $('<div class="cheerleader-confetti-piece"></div>');
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const shape = shapes[Math.floor(Math.random() * shapes.length)];
+            const size = 6 + Math.random() * 8;
+            const startX = rect.left + (Math.random() - 0.5) * 200;
+            const startY = rect.top - 20;
+            const drift = (Math.random() - 0.5) * 300;
+            const rotation = Math.random() * 720 - 360;
+            const duration = 1.5 + Math.random() * 1.5;
+            const delay = Math.random() * 0.3;
+
+            let borderRadius = '50%';
+            let clipPath = 'none';
+            if (shape === 'square') borderRadius = '2px';
+            if (shape === 'triangle') clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
+
+            $piece.css({
+                position: 'absolute',
+                left: startX + 'px',
+                top: startY + 'px',
+                width: size + 'px',
+                height: size + 'px',
+                backgroundColor: color,
+                borderRadius: borderRadius,
+                clipPath: clipPath,
+                opacity: 1,
+                animation: `cheerleader-confetti-fall ${duration}s ease-out ${delay}s forwards`
+            });
+
+            $piece[0].style.setProperty('--drift', drift + 'px');
+            $piece[0].style.setProperty('--rotation', rotation + 'deg');
+
+            $container.append($piece);
+        }
+
+        $('body').append($container);
+        setTimeout(() => $container.remove(), 4000);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // QUICK REACTIONS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    const REACTION_EMOJIS = ['👏', '🔥', '😂', '❤️', '💯', '🎯', '✨', '🤯'];
+
+    function createReactionBar() {
+        const $bar = $('<div class="cheerleader-reactions-bar"></div>');
+        REACTION_EMOJIS.forEach(emoji => {
+            const $btn = $(`<button class="cheerleader-reaction-btn" data-emoji="${emoji}" title="React with ${emoji}">${emoji}</button>`);
+            $btn.on('click', function () {
+                const em = $(this).data('emoji');
+                recordReaction(em);
+                $(this).addClass('cheerleader-reaction-popped');
+                setTimeout(() => $(this).removeClass('cheerleader-reaction-popped'), 400);
+
+                const $float = $(`<span class="cheerleader-reaction-float">${em}</span>`);
+                $(this).append($float);
+                setTimeout(() => $float.remove(), 800);
+            });
+            $bar.append($btn);
+        });
+        return $bar;
+    }
+
+    function recordReaction(emoji) {
+        const settings = getSettings();
+        if (!settings.stats.reactions) settings.stats.reactions = {};
+        settings.stats.reactions[emoji] = (settings.stats.reactions[emoji] || 0) + 1;
+        saveSettings();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // CSS MANAGEMENT
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -440,7 +848,7 @@
         const history = getHistoryStorage();
 
         const exportData = {
-            version: "2.0.0",
+            version: "3.0.0",
             timestamp: Date.now(),
             settings: JSON.parse(JSON.stringify(settings)),
             history: history
@@ -594,24 +1002,47 @@
             avatarUrl = 'file:///' + avatarUrl.replace(/\\/g, '/');
         }
 
-        let avatarHtml;
+        // Mood detection
+        let moodEmoji = '';
+        let moodClass = '';
+        if (settings.moodDetectionEnabled) {
+            const mood = detectMood(text);
+            if (mood) {
+                moodEmoji = getMoodEmoji(mood);
+                moodClass = `cheerleader-mood-${mood}`;
+            }
+        }
 
+        // Streak tracking
+        const streak = updateStreak();
+        const streakLabel = getStreakLabel(streak);
+
+        // Update statistics
+        updateStats(text);
+
+        let avatarHtml;
         if (avatarUrl) {
             avatarHtml = `<img id="cheerleader-avatar" src="${avatarUrl}" onerror="this.style.display='none'">`;
         } else {
-            avatarHtml = `<span id="cheerleader-avatar-emoji">🎉</span>`;
+            avatarHtml = `<span id="cheerleader-avatar-emoji">${moodEmoji || '🎉'}</span>`;
         }
 
         let $bar = $('#cheerleader-output-bar');
 
+        const streakHtml = streakLabel ? `<span class="cheerleader-streak-badge ${streakLabel.class}">${streakLabel.text} x${streak}</span>` : '';
+        const moodBadgeHtml = moodEmoji && avatarUrl ? `<span class="cheerleader-mood-badge">${moodEmoji}</span>` : '';
+
         if ($bar.length === 0) {
             $bar = $('<div id="cheerleader-output-bar">').css('display', 'none').html(`
                 <div class="cheerleader-header">
-                    <span id="cheerleader-header">${avatarHtml}<span id="cheerleader-name">${charName}</span></span>
+                    <span id="cheerleader-header">${avatarHtml}<span id="cheerleader-name">${charName}</span>${moodBadgeHtml}${streakHtml}</span>
                     <span id="close-cheerleader-bar" title="Close (Esc)">✕</span>
                 </div>
                 <div id="cheerleader-output-content"></div>
+                <div class="cheerleader-reactions-container"></div>
             `);
+
+            if (moodClass) $bar.addClass(moodClass);
 
             // Position based on settings
             const position = settings.outputPosition || 'after_chat';
@@ -639,13 +1070,43 @@
                     $('#chat').length ? $('#chat').after($bar) : $('body').append($bar);
             }
 
-            $bar.on('click', '#close-cheerleader-bar', () => $bar.slideUp());
+            $bar.on('click', '#close-cheerleader-bar', () => {
+                clearInterval(State.typingTimer);
+                $bar.slideUp();
+            });
         } else {
-            $('#cheerleader-header').html(`${avatarHtml}<span id="cheerleader-name">${charName}</span>`);
+            $bar.removeClass(Object.keys(MOOD_PATTERNS).map(m => `cheerleader-mood-${m}`).join(' '));
+            if (moodClass) $bar.addClass(moodClass);
+            $('#cheerleader-header').html(`${avatarHtml}<span id="cheerleader-name">${charName}</span>${moodBadgeHtml}${streakHtml}`);
         }
 
-        $('#cheerleader-output-content').text(text);
-        $bar.slideDown(200);
+        // Add reactions bar if enabled
+        const $reactionsContainer = $bar.find('.cheerleader-reactions-container');
+        $reactionsContainer.empty();
+        if (settings.reactionsEnabled) {
+            $reactionsContainer.append(createReactionBar());
+        }
+
+        const $content = $('#cheerleader-output-content');
+
+        // Typing animation or instant display
+        if (settings.typingAnimationEnabled) {
+            $content.text('');
+            $bar.slideDown(200, () => {
+                typeText($content, text, settings.typingSpeed || DEFAULTS.TYPING_SPEED);
+            });
+        } else {
+            $content.text(text);
+            $bar.slideDown(200);
+        }
+
+        // Confetti effect
+        if (settings.confettiEnabled) {
+            setTimeout(() => {
+                const target = $bar[0];
+                if (target) spawnConfetti(target);
+            }, settings.typingAnimationEnabled ? 200 : 0);
+        }
 
         addToChatHistory(text);
         State.messagesSinceLastHype = 0;
@@ -653,9 +1114,13 @@
         // Auto-dismiss if enabled
         clearTimeout(State.autoDismissTimer);
         if (settings.autoDismissSeconds > 0) {
+            const dismissDelay = settings.typingAnimationEnabled
+                ? (text.length * (settings.typingSpeed || DEFAULTS.TYPING_SPEED)) + settings.autoDismissSeconds * 1000
+                : settings.autoDismissSeconds * 1000;
             State.autoDismissTimer = setTimeout(() => {
+                clearInterval(State.typingTimer);
                 $bar.slideUp(200);
-            }, settings.autoDismissSeconds * 1000);
+            }, dismissDelay);
         }
     }
 
@@ -996,6 +1461,11 @@
         $('#cheerleader-auto-dismiss').val(s.autoDismissSeconds || 0);
         $('#cheerleader-output-position').val(s.outputPosition || 'after_chat');
         $('#cheerleader-keyboard-shortcut').prop('checked', s.keyboardShortcutEnabled !== false);
+        $('#cheerleader-typing-animation').prop('checked', s.typingAnimationEnabled !== false);
+        $('#cheerleader-typing-speed').val(s.typingSpeed || DEFAULTS.TYPING_SPEED);
+        $('#cheerleader-confetti').prop('checked', s.confettiEnabled !== false);
+        $('#cheerleader-reactions').prop('checked', s.reactionsEnabled !== false);
+        $('#cheerleader-mood-detection').prop('checked', s.moodDetectionEnabled !== false);
 
         updateHistoryCount();
         updateCooldownIndicator();
@@ -1321,6 +1791,43 @@
             saveSettings();
         });
 
+        // Effects
+        $doc.on('change', '#cheerleader-typing-animation', function () {
+            getSettings().typingAnimationEnabled = this.checked;
+            saveSettings();
+        });
+
+        $doc.on('input', '#cheerleader-typing-speed', function () {
+            getSettings().typingSpeed = Math.max(5, Math.min(200, parseInt(this.value) || DEFAULTS.TYPING_SPEED));
+            debouncedSave();
+        });
+
+        $doc.on('change', '#cheerleader-confetti', function () {
+            getSettings().confettiEnabled = this.checked;
+            saveSettings();
+        });
+
+        $doc.on('change', '#cheerleader-reactions', function () {
+            getSettings().reactionsEnabled = this.checked;
+            saveSettings();
+        });
+
+        $doc.on('change', '#cheerleader-mood-detection', function () {
+            getSettings().moodDetectionEnabled = this.checked;
+            saveSettings();
+        });
+
+        // Statistics
+        $doc.on('click', '#cheerleader-view-stats', showStatsPopup);
+        $doc.on('click', '#cheerleader-reset-stats', () => {
+            if (!confirm('Reset all statistics?')) return;
+            const s = getSettings();
+            s.stats = { totalHypes: 0, totalWords: 0, longestStreak: 0, reactions: {} };
+            State.currentStreak = 0;
+            saveSettings();
+            toastr.success('Statistics reset!');
+        });
+
         // Avatar
         $doc.on('input', '#cheerleader-avatar', function () {
             const url = this.value;
@@ -1564,6 +2071,58 @@
         });
     }
 
+    function showStatsPopup() {
+        const stats = getStatsDisplay();
+
+        const reactionHtml = stats.topReactions.length > 0
+            ? stats.topReactions.map(([emoji, count]) => `<span class="cheerleader-stat-reaction">${emoji} ${count}</span>`).join(' ')
+            : '<span style="opacity:0.5">No reactions yet</span>';
+
+        $('body').append(`
+            <div id="cheerleader-stats-overlay"></div>
+            <div id="cheerleader-stats-popup">
+                <div class="cheerleader-popup-header">
+                    <h3>📊 Hype Statistics</h3>
+                    <span id="close-stats-popup">✕</span>
+                </div>
+                <div class="cheerleader-stats-grid">
+                    <div class="cheerleader-stat-card">
+                        <div class="cheerleader-stat-number">${stats.totalHypes}</div>
+                        <div class="cheerleader-stat-label">Total Hypes</div>
+                    </div>
+                    <div class="cheerleader-stat-card">
+                        <div class="cheerleader-stat-number">${stats.totalWords}</div>
+                        <div class="cheerleader-stat-label">Words Generated</div>
+                    </div>
+                    <div class="cheerleader-stat-card">
+                        <div class="cheerleader-stat-number">${stats.avgWords}</div>
+                        <div class="cheerleader-stat-label">Avg Words/Hype</div>
+                    </div>
+                    <div class="cheerleader-stat-card">
+                        <div class="cheerleader-stat-number">${stats.longestStreak}</div>
+                        <div class="cheerleader-stat-label">Longest Streak</div>
+                    </div>
+                    <div class="cheerleader-stat-card">
+                        <div class="cheerleader-stat-number">${stats.currentStreak}</div>
+                        <div class="cheerleader-stat-label">Current Streak</div>
+                    </div>
+                    <div class="cheerleader-stat-card">
+                        <div class="cheerleader-stat-number">${stats.chatCount}</div>
+                        <div class="cheerleader-stat-label">Chats with Hype</div>
+                    </div>
+                </div>
+                <div class="cheerleader-stat-section">
+                    <h4>Top Reactions</h4>
+                    <div class="cheerleader-stat-reactions">${reactionHtml}</div>
+                </div>
+            </div>
+        `);
+
+        $(document).one('click', '#close-stats-popup, #cheerleader-stats-overlay', () => {
+            $('#cheerleader-stats-popup, #cheerleader-stats-overlay').remove();
+        });
+    }
+
     // ═══════════════════════════════════════════════════════════════════════════
     // HYPE BUTTON (Optimized - No global MutationObserver)
     // ═══════════════════════════════════════════════════════════════════════════
@@ -1616,6 +2175,39 @@
             childList: true,
             subtree: false // Only direct children, not deep subtree
         });
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SLASH COMMAND
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function registerSlashCommand() {
+        try {
+            const ctx = getContext();
+            if (ctx.registerSlashCommand) {
+                ctx.registerSlashCommand('hype', (args) => {
+                    generateHype();
+                    return '';
+                }, [], '<span class="monospace">/hype</span> – generates a cheerleader hype comment on the current chat', true, true);
+                log('Slash command /hype registered');
+            } else if (typeof SillyTavern !== 'undefined' && SillyTavern.getContext) {
+                const stCtx = SillyTavern.getContext();
+                if (stCtx.SlashCommandParser?.addCommandObject) {
+                    stCtx.SlashCommandParser.addCommandObject({
+                        name: 'hype',
+                        callback: async () => {
+                            await generateHype();
+                            return '';
+                        },
+                        helpString: 'Generate a cheerleader hype comment on the current chat.',
+                        aliases: ['cheerleader', 'cheer'],
+                    });
+                    log('Slash command /hype registered via SlashCommandParser');
+                }
+            }
+        } catch (e) {
+            log('Slash command registration skipped:', e.message);
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -1817,6 +2409,67 @@
                                         <input type="checkbox" id="cheerleader-keyboard-shortcut">
                                         Enable Keyboard Shortcut (Ctrl+Shift+H)
                                     </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Effects & Fun Drawer -->
+                    <div class="cheerleader-drawer">
+                        <div class="inline-drawer">
+                            <div class="inline-drawer-toggle inline-drawer-header">
+                                <b>✨ Effects & Fun</b>
+                                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+                            </div>
+                            <div class="inline-drawer-content">
+                                <div class="cheerleader-section">
+                                    <label class="checkbox_label">
+                                        <input type="checkbox" id="cheerleader-typing-animation">
+                                        Typing Animation <span class="cheerleader-tooltip" title="Show hype text with a typewriter effect">?</span>
+                                    </label>
+                                    <div class="cheerleader-row" style="margin-top:5px">
+                                        <label style="white-space:nowrap;font-size:0.9em">Speed (ms/char):</label>
+                                        <input id="cheerleader-typing-speed" class="text_pole" type="number" min="5" max="200" value="30" style="width:80px">
+                                    </div>
+                                </div>
+
+                                <div class="cheerleader-section" style="margin-top:10px">
+                                    <label class="checkbox_label">
+                                        <input type="checkbox" id="cheerleader-confetti">
+                                        Confetti Burst <span class="cheerleader-tooltip" title="Celebrate each hype with a confetti animation">?</span>
+                                    </label>
+                                </div>
+
+                                <div class="cheerleader-section" style="margin-top:10px">
+                                    <label class="checkbox_label">
+                                        <input type="checkbox" id="cheerleader-reactions">
+                                        Quick Reactions <span class="cheerleader-tooltip" title="Show emoji reaction buttons under each hype message">?</span>
+                                    </label>
+                                </div>
+
+                                <div class="cheerleader-section" style="margin-top:10px">
+                                    <label class="checkbox_label">
+                                        <input type="checkbox" id="cheerleader-mood-detection">
+                                        Mood Detection <span class="cheerleader-tooltip" title="Detect the mood of hype messages and add matching emoji">?</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Drawer -->
+                    <div class="cheerleader-drawer">
+                        <div class="inline-drawer">
+                            <div class="inline-drawer-toggle inline-drawer-header">
+                                <b>📊 Statistics</b>
+                                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+                            </div>
+                            <div class="inline-drawer-content">
+                                <div class="cheerleader-section">
+                                    <div class="cheerleader-row" style="gap:10px">
+                                        <button id="cheerleader-view-stats" class="menu_button" style="flex:1"><i class="fa-solid fa-chart-bar"></i> View Stats</button>
+                                        <button id="cheerleader-reset-stats" class="menu_button" style="flex:1"><i class="fa-solid fa-eraser"></i> Reset Stats</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2030,6 +2683,79 @@
         .cheerleader-preview-message.assistant { background: rgba(255,100,100,0.1); border-color: #ff6666; }
         .cheerleader-preview-role { font-weight: bold; text-transform: uppercase; font-size: 0.8em; margin-bottom: 4px; }
         .cheerleader-preview-content { white-space: pre-wrap; word-break: break-word; font-size: 0.9em; max-height: 200px; overflow-y: auto; }
+
+        /* Streak badges */
+        .cheerleader-streak-badge {
+            font-size: 0.7em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            animation: cheerleader-streak-pop 0.4s ease-out;
+        }
+        .cheerleader-streak-badge.combo { background: rgba(255,200,0,0.2); color: #ffc800; border: 1px solid rgba(255,200,0,0.4); }
+        .cheerleader-streak-badge.unstoppable { background: rgba(255,100,0,0.2); color: #ff6400; border: 1px solid rgba(255,100,0,0.4); }
+        .cheerleader-streak-badge.on-fire { background: rgba(255,50,0,0.2); color: #ff3200; border: 1px solid rgba(255,50,0,0.4); animation: cheerleader-streak-pop 0.4s ease-out, cheerleader-glow-pulse 1.5s ease-in-out infinite; }
+        .cheerleader-streak-badge.legendary { background: linear-gradient(90deg, rgba(255,0,128,0.3), rgba(128,0,255,0.3)); color: #ff80ff; border: 1px solid rgba(255,0,255,0.5); animation: cheerleader-streak-pop 0.4s ease-out, cheerleader-rainbow-shift 2s linear infinite; }
+        @keyframes cheerleader-streak-pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes cheerleader-glow-pulse { 0%, 100% { box-shadow: 0 0 5px rgba(255,50,0,0.3); } 50% { box-shadow: 0 0 15px rgba(255,50,0,0.6); } }
+        @keyframes cheerleader-rainbow-shift { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+        /* Mood badge */
+        .cheerleader-mood-badge { margin-left: 6px; font-size: 1.1em; animation: cheerleader-mood-bounce 0.5s ease-out; }
+        @keyframes cheerleader-mood-bounce { 0% { transform: scale(0) rotate(-20deg); } 60% { transform: scale(1.3) rotate(10deg); } 100% { transform: scale(1) rotate(0); } }
+
+        /* Typing animation cursor */
+        .cheerleader-typing-active::after {
+            content: '▌';
+            animation: cheerleader-blink 0.6s step-end infinite;
+            margin-left: 1px;
+            opacity: 0.7;
+        }
+        @keyframes cheerleader-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* Confetti */
+        @keyframes cheerleader-confetti-fall {
+            0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(400px) translateX(var(--drift, 0px)) rotate(var(--rotation, 360deg)); opacity: 0; }
+        }
+
+        /* Quick Reactions */
+        .cheerleader-reactions-bar { display: flex; gap: 4px; margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; }
+        .cheerleader-reaction-btn {
+            background: none; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 2px 8px;
+            font-size: 0.9em; cursor: pointer; transition: all 0.2s; position: relative; overflow: visible;
+        }
+        .cheerleader-reaction-btn:hover { background: rgba(255,255,255,0.1); transform: scale(1.15); border-color: rgba(255,255,255,0.3); }
+        .cheerleader-reaction-popped { animation: cheerleader-reaction-pop 0.4s ease-out; }
+        @keyframes cheerleader-reaction-pop { 0% { transform: scale(1); } 40% { transform: scale(1.4); } 100% { transform: scale(1); } }
+        .cheerleader-reaction-float {
+            position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+            font-size: 1.2em; animation: cheerleader-float-up 0.8s ease-out forwards; pointer-events: none;
+        }
+        @keyframes cheerleader-float-up { 0% { opacity: 1; transform: translateX(-50%) translateY(0); } 100% { opacity: 0; transform: translateX(-50%) translateY(-30px); } }
+
+        /* Statistics popup */
+        #cheerleader-stats-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; animation: cheerleader-fadeIn 0.2s ease-out; }
+        #cheerleader-stats-popup {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--SmartThemeBodyColor); border: 2px solid var(--SmartThemeBorderColor);
+            border-radius: 10px; padding: 24px; max-width: 500px; width: 90%; z-index: 9999;
+            animation: cheerleader-popIn 0.3s ease-out;
+        }
+        .cheerleader-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+        .cheerleader-stat-card {
+            background: var(--SmartThemeBlurTintColor); border-radius: 8px; padding: 12px; text-align: center;
+            border: 1px solid var(--SmartThemeBorderColor); transition: transform 0.2s;
+        }
+        .cheerleader-stat-card:hover { transform: translateY(-2px); }
+        .cheerleader-stat-number { font-size: 1.8em; font-weight: bold; color: gold; }
+        .cheerleader-stat-label { font-size: 0.8em; color: var(--SmartThemeQuoteColor); margin-top: 4px; }
+        .cheerleader-stat-section { margin-top: 12px; }
+        .cheerleader-stat-section h4 { margin: 0 0 8px; color: var(--SmartThemeQuoteColor); font-size: 0.9em; }
+        .cheerleader-stat-reactions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .cheerleader-stat-reaction { background: var(--SmartThemeBlurTintColor); padding: 4px 10px; border-radius: 12px; font-size: 0.9em; }
     </style>
     `;
 
@@ -2055,8 +2781,9 @@
         addHypeButton();
         setupButtonObserver();
         setupAutoHype();
+        registerSlashCommand();
 
-        log('Initialized v2.0.0');
+        log('Initialized v3.0.0');
     }
 
     // Wait for jQuery

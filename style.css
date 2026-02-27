@@ -1,4 +1,4 @@
-/* Cheerleader Hype Bot v2.0.0 - Enhanced Styles */
+/* Cheerleader Hype Bot v3.0.0 - Enhanced Styles */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SETTINGS PANEL
@@ -29,17 +29,19 @@
 
 #cheerleader-hype-btn {
     opacity: 0.85;
-    transition: opacity 0.2s, transform 0.15s;
+    transition: opacity 0.2s, transform 0.15s, filter 0.2s;
     user-select: none;
+    position: relative;
 }
 
 #cheerleader-hype-btn:hover {
     opacity: 1;
-    transform: scale(1.1);
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.4));
 }
 
 #cheerleader-hype-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.92);
 }
 
 #cheerleader-hype-btn.cheerleader-loading {
@@ -64,6 +66,7 @@
 
 #cheerleader-output-bar {
     animation: cheerleader-fadeIn 0.3s ease-out;
+    transition: box-shadow 0.3s ease;
 }
 
 @keyframes cheerleader-fadeIn {
@@ -89,6 +92,8 @@
 #cheerleader-header {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
 }
 
 #close-cheerleader-bar {
@@ -97,6 +102,7 @@
     transition: opacity 0.2s, transform 0.2s;
     font-size: 1.2em;
     padding: 4px 8px;
+    flex-shrink: 0;
 }
 
 #close-cheerleader-bar:hover {
@@ -106,7 +112,190 @@
 
 #cheerleader-output-content {
     font-style: italic;
-    line-height: 1.5;
+    line-height: 1.6;
+    min-height: 1.2em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPING ANIMATION
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-typing-active {
+    min-height: 1.2em;
+}
+
+.cheerleader-typing-active::after {
+    content: '▌';
+    animation: cheerleader-blink 0.6s step-end infinite;
+    margin-left: 1px;
+    opacity: 0.7;
+    font-style: normal;
+}
+
+@keyframes cheerleader-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STREAK BADGES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-streak-badge {
+    font-size: 0.65em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 8px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    display: inline-flex;
+    align-items: center;
+    animation: cheerleader-streak-pop 0.4s ease-out;
+    vertical-align: middle;
+}
+
+.cheerleader-streak-badge.combo {
+    background: rgba(255, 200, 0, 0.15);
+    color: #ffc800;
+    border: 1px solid rgba(255, 200, 0, 0.3);
+}
+
+.cheerleader-streak-badge.unstoppable {
+    background: rgba(255, 100, 0, 0.15);
+    color: #ff6400;
+    border: 1px solid rgba(255, 100, 0, 0.3);
+}
+
+.cheerleader-streak-badge.on-fire {
+    background: rgba(255, 50, 0, 0.15);
+    color: #ff3200;
+    border: 1px solid rgba(255, 50, 0, 0.3);
+    animation: cheerleader-streak-pop 0.4s ease-out,
+               cheerleader-glow-pulse 1.5s ease-in-out infinite;
+}
+
+.cheerleader-streak-badge.legendary {
+    background: linear-gradient(90deg, rgba(255, 0, 128, 0.2), rgba(128, 0, 255, 0.2));
+    color: #ff80ff;
+    border: 1px solid rgba(255, 0, 255, 0.4);
+    animation: cheerleader-streak-pop 0.4s ease-out,
+               cheerleader-rainbow-shift 2s linear infinite;
+}
+
+@keyframes cheerleader-streak-pop {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes cheerleader-glow-pulse {
+    0%, 100% { box-shadow: 0 0 5px rgba(255, 50, 0, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(255, 50, 0, 0.6); }
+}
+
+@keyframes cheerleader-rainbow-shift {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOOD BADGE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-mood-badge {
+    margin-left: 6px;
+    font-size: 1.1em;
+    animation: cheerleader-mood-bounce 0.5s ease-out;
+    display: inline-block;
+}
+
+@keyframes cheerleader-mood-bounce {
+    0% { transform: scale(0) rotate(-20deg); }
+    60% { transform: scale(1.3) rotate(10deg); }
+    100% { transform: scale(1) rotate(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONFETTI
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-confetti-container {
+    pointer-events: none;
+}
+
+.cheerleader-confetti-piece {
+    will-change: transform, opacity;
+}
+
+@keyframes cheerleader-confetti-fall {
+    0% {
+        transform: translateY(0) translateX(0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(400px) translateX(var(--drift, 0px)) rotate(var(--rotation, 360deg));
+        opacity: 0;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   QUICK REACTIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-reactions-container {
+    min-height: 0;
+}
+
+.cheerleader-reactions-bar {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    flex-wrap: wrap;
+}
+
+.cheerleader-reaction-btn {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 2px 8px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+    overflow: visible;
+    line-height: 1.4;
+}
+
+.cheerleader-reaction-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.15);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.cheerleader-reaction-popped {
+    animation: cheerleader-reaction-pop 0.4s ease-out;
+}
+
+@keyframes cheerleader-reaction-pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}
+
+.cheerleader-reaction-float {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.2em;
+    animation: cheerleader-float-up 0.8s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes cheerleader-float-up {
+    0% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-30px) scale(1.5); }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -151,11 +340,105 @@
 }
 
 .cheerleader-history-item {
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, transform 0.15s;
 }
 
 .cheerleader-history-item:hover {
     background-color: var(--SmartThemeEmColor);
+    transform: translateX(3px);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STATISTICS POPUP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#cheerleader-stats-overlay {
+    animation: cheerleader-fadeIn 0.2s ease-out;
+}
+
+#cheerleader-stats-popup {
+    animation: cheerleader-popIn 0.3s ease-out;
+}
+
+#close-stats-popup {
+    cursor: pointer;
+    font-size: 1.5em;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+#close-stats-popup:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.cheerleader-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.cheerleader-stat-card {
+    background: var(--SmartThemeBlurTintColor);
+    border-radius: 10px;
+    padding: 14px 10px;
+    text-align: center;
+    border: 1px solid var(--SmartThemeBorderColor);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cheerleader-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.cheerleader-stat-number {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: gold;
+    line-height: 1.2;
+}
+
+.cheerleader-stat-label {
+    font-size: 0.75em;
+    color: var(--SmartThemeQuoteColor);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cheerleader-stat-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--SmartThemeBorderColor);
+}
+
+.cheerleader-stat-section h4 {
+    margin: 0 0 8px;
+    color: var(--SmartThemeQuoteColor);
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cheerleader-stat-reactions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.cheerleader-stat-reaction {
+    background: var(--SmartThemeBlurTintColor);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.9em;
+    border: 1px solid var(--SmartThemeBorderColor);
+    transition: transform 0.15s;
+}
+
+.cheerleader-stat-reaction:hover {
+    transform: scale(1.05);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -175,11 +458,12 @@
     border: 1px solid var(--SmartThemeBorderColor);
     border-radius: 50%;
     font-weight: bold;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, color 0.2s;
 }
 
 .cheerleader-tooltip:hover {
     background-color: var(--SmartThemeBlurTintColor);
+    color: gold;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -194,6 +478,7 @@
     border-radius: 4px;
     margin-top: 5px;
     border-left: 3px solid var(--SmartThemeQuoteColor);
+    transition: opacity 0.3s;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -203,10 +488,15 @@
 .cheerleader-danger {
     background: rgba(200, 50, 50, 0.2) !important;
     border-color: rgba(200, 50, 50, 0.5) !important;
+    transition: background-color 0.2s, transform 0.1s;
 }
 
 .cheerleader-danger:hover {
     background: rgba(200, 50, 50, 0.4) !important;
+}
+
+.cheerleader-danger:active {
+    transform: scale(0.97);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -219,6 +509,7 @@
 
 #cheerleader-settings .inline-drawer-header {
     transition: background-color 0.2s;
+    border-radius: 4px;
 }
 
 #cheerleader-settings .inline-drawer-header:hover {
@@ -236,13 +527,14 @@
     border-radius: 4px;
     display: none;
     border: 1px solid var(--SmartThemeBorderColor);
-    transition: transform 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
     background: transparent;
 }
 
 .cheerleader-avatar-preview:hover {
     transform: scale(1.5);
     z-index: 100;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -266,16 +558,72 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   FLOATING PANEL
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-floating {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+}
+
+.cheerleader-floating .cheerleader-header {
+    cursor: move;
+    user-select: none;
+}
+
+.cheerleader-floating #cheerleader-output-content {
+    flex: 1;
+    overflow: auto;
+}
+
+.cheerleader-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: se-resize;
+    background: linear-gradient(135deg, transparent 50%, var(--SmartThemeBorderColor) 50%);
+    border-radius: 0 0 10px 0;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+.cheerleader-resize-handle:hover {
+    opacity: 0.8;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    RESPONSIVE ADJUSTMENTS
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-    #cheerleader-history-popup {
-        max-width: 90vw;
+    #cheerleader-history-popup,
+    #cheerleader-stats-popup {
+        max-width: 95vw;
         padding: 15px;
+    }
+
+    .cheerleader-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .cheerleader-row {
         flex-wrap: wrap;
+    }
+
+    .cheerleader-reactions-bar {
+        gap: 2px;
+    }
+
+    .cheerleader-reaction-btn {
+        padding: 2px 6px;
+        font-size: 0.8em;
+    }
+}
+
+@media (max-width: 400px) {
+    .cheerleader-stats-grid {
+        grid-template-columns: 1fr 1fr;
     }
 }

@@ -1,8 +1,8 @@
 {
     "display_name": "Cheerleader Hype Bot",
     "author": "Antigravity",
-    "version": "2.0.0",
-    "description": "Generate fun, short commentary on your roleplay! Features multiple personas, keyboard shortcuts, auto-hype, and customizable themes.",
+    "version": "3.0.0",
+    "description": "Generate fun, short commentary on your roleplay! Features typing animations, confetti effects, streak tracking, mood detection, quick reactions, statistics, 7 CSS themes, slash commands, and more.",
     "js": "index.js",
     "css": "style.css",
     "loading_order": 100,
