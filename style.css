@@ -1,4 +1,4 @@
-/* Cheerleader Hype Bot v2.0.0 - Enhanced Styles */
+/* Cheerleader Hype Bot v3.0.0 - Enhanced Styles */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SETTINGS PANEL
@@ -110,6 +110,243 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   ENTRANCE ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-anim-bounce {
+    animation: cheerleader-bounce 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes cheerleader-bounce {
+    0% { transform: translateY(30px); opacity: 0; }
+    50% { transform: translateY(-10px); opacity: 1; }
+    70% { transform: translateY(5px); }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.cheerleader-anim-pop {
+    animation: cheerleader-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes cheerleader-pop {
+    0% { transform: scale(0.3); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPEWRITER EFFECT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-typewriter-active::after {
+    content: '▌';
+    animation: cheerleader-blink 0.7s step-end infinite;
+    color: var(--SmartThemeQuoteColor);
+    margin-left: 1px;
+}
+
+@keyframes cheerleader-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOOD BADGE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-mood-badge {
+    font-size: 0.75em;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    margin-right: 10px;
+    white-space: nowrap;
+    transition: background 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cheerleader-mood-badge:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   REACTION BUTTONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-reactions {
+    display: flex;
+    gap: 4px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cheerleader-react-btn {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    padding: 4px 8px;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0.5;
+    line-height: 1;
+}
+
+.cheerleader-react-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: scale(1.2);
+}
+
+.cheerleader-react-btn:active {
+    transform: scale(0.9);
+}
+
+.cheerleader-react-pop {
+    animation: cheerleader-reactPop 0.4s ease-out;
+}
+
+@keyframes cheerleader-reactPop {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.6); }
+    100% { transform: scale(1); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STREAK & HEADER ELEMENTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-mini-streak {
+    font-size: 0.7em;
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(255, 100, 0, 0.2), rgba(255, 200, 0, 0.15));
+    color: #ff8800;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.cheerleader-header-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STREAK PANEL IN SETTINGS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-streak-panel {
+    padding: 12px;
+    background: var(--SmartThemeBlurTintColor);
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.cheerleader-streak-display {
+    text-align: center;
+    font-size: 1.3em;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: linear-gradient(135deg, rgba(255, 100, 0, 0.08), rgba(255, 200, 0, 0.08));
+    border-radius: 10px;
+    font-weight: bold;
+    border: 1px solid rgba(255, 150, 0, 0.15);
+}
+
+.cheerleader-mini-stats {
+    display: flex;
+    justify-content: space-around;
+    font-size: 0.9em;
+    color: var(--SmartThemeQuoteColor);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STATS POPUP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#cheerleader-stats-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9998;
+    animation: cheerleader-fadeIn 0.2s ease-out;
+}
+
+#cheerleader-stats-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--SmartThemeBodyColor);
+    border: 2px solid var(--SmartThemeBorderColor);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 520px;
+    width: 90%;
+    max-height: 80vh;
+    z-index: 9999;
+    overflow-y: auto;
+    animation: cheerleader-popIn 0.3s ease-out;
+}
+
+.cheerleader-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.cheerleader-stat-card {
+    text-align: center;
+    padding: 16px 8px;
+    background: var(--SmartThemeBlurTintColor);
+    border-radius: 12px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cheerleader-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.cheerleader-stat-number {
+    font-size: 1.6em;
+    font-weight: bold;
+    color: gold;
+    line-height: 1.2;
+}
+
+.cheerleader-stat-label {
+    font-size: 0.8em;
+    color: var(--SmartThemeQuoteColor);
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cheerleader-stats-section {
+    margin-top: 16px;
+    padding: 14px;
+    background: var(--SmartThemeBlurTintColor);
+    border-radius: 10px;
+}
+
+.cheerleader-stats-section h4 {
+    margin: 0 0 10px;
+    color: gold;
+    font-size: 0.95em;
+}
+
+.cheerleader-stat-persona {
+    padding: 5px 0;
+    font-size: 0.9em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    HISTORY POPUP
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -132,9 +369,20 @@
     }
 }
 
+.cheerleader-history-search-bar {
+    margin-bottom: 12px;
+}
+
+.cheerleader-history-search-bar input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .cheerleader-history-list {
     scrollbar-width: thin;
     scrollbar-color: var(--SmartThemeBorderColor) transparent;
+    max-height: 50vh;
+    overflow-y: auto;
 }
 
 .cheerleader-history-list::-webkit-scrollbar {
@@ -151,11 +399,71 @@
 }
 
 .cheerleader-history-item {
-    transition: background-color 0.2s;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: var(--SmartThemeBlurTintColor);
+    border-radius: 8px;
+    transition: background-color 0.2s, transform 0.2s;
+    border: 1px solid transparent;
 }
 
 .cheerleader-history-item:hover {
     background-color: var(--SmartThemeEmColor);
+    border-color: var(--SmartThemeBorderColor);
+}
+
+.cheerleader-history-meta {
+    font-size: 0.85em;
+    color: var(--SmartThemeQuoteColor);
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cheerleader-history-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cheerleader-history-persona {
+    color: gold;
+    font-weight: bold;
+}
+
+.cheerleader-history-time {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+.cheerleader-history-text {
+    font-style: italic;
+}
+
+.cheerleader-history-reactions {
+    margin-top: 4px;
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+.cheerleader-history-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    opacity: 0.3;
+    color: inherit;
+    font-size: 0.9em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.cheerleader-history-delete:hover {
+    opacity: 1;
+    background: rgba(200, 50, 50, 0.3);
+    color: #ff6666;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -266,16 +574,67 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   FLOATING OUTPUT BAR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-floating {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+}
+
+.cheerleader-floating .cheerleader-header {
+    cursor: move;
+    user-select: none;
+}
+
+.cheerleader-floating #cheerleader-output-content {
+    flex: 1;
+    overflow: auto;
+}
+
+.cheerleader-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: se-resize;
+    background: linear-gradient(135deg, transparent 50%, var(--SmartThemeBorderColor) 50%);
+    border-radius: 0 0 10px 0;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.cheerleader-resize-handle:hover {
+    opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    RESPONSIVE ADJUSTMENTS
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-    #cheerleader-history-popup {
-        max-width: 90vw;
+    #cheerleader-history-popup,
+    #cheerleader-stats-popup {
+        max-width: 95vw;
         padding: 15px;
+    }
+
+    .cheerleader-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .cheerleader-row {
         flex-wrap: wrap;
+    }
+
+    .cheerleader-reactions {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .cheerleader-stats-grid {
+        grid-template-columns: 1fr 1fr;
     }
 }
