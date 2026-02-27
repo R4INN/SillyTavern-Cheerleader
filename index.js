@@ -1,7 +1,9 @@
-// SillyTavern Cheerleader Extension v2.0.0 - Completely Revamped
+// SillyTavern Cheerleader Extension v3.0.0 - Major Feature Update
 // Author: Antigravity
-// Features: Multiple personas, keyboard shortcuts, loading states, cooldown indicators,
-//           export/import, auto-dismiss, optimized performance
+// v3.0 Features: Typewriter effect, confetti animations, toast notifications,
+//   3 new CSS themes (Retro Terminal, Pastel Bubble, Dark Elegance), slash command /hype,
+//   sound notifications, copy/regenerate buttons, history search & favorites,
+//   statistics dashboard, markdown rendering, auto-retry, and more!
 
 (function () {
     'use strict';
@@ -27,6 +29,13 @@
         AUTO_DISMISS: 0,
         OUTPUT_POSITION: "after_chat",
         KEYBOARD_SHORTCUT: true,
+        ENABLE_TYPEWRITER: true,
+        TYPEWRITER_SPEED: 30,
+        ENABLE_SOUND: false,
+        ENABLE_CONFETTI: true,
+        ENABLE_MARKDOWN: true,
+        RETRY_ON_FAILURE: true,
+        MAX_RETRIES: 1,
         PROMPT_TEMPLATE: `[
   {
     "role": "system",
@@ -139,6 +148,173 @@
             #cheerleader-output-content {
                 font-size: 0.95em;
             }
+        `,
+        "Retro Terminal": `
+            #cheerleader-output-bar {
+                margin: 10px;
+                padding: 15px;
+                background: #0a0a0a;
+                border: 1px solid #33ff33;
+                border-radius: 2px;
+                font-family: 'Courier New', 'Consolas', monospace;
+                box-shadow: 0 0 10px rgba(51,255,51,0.15), inset 0 0 60px rgba(51,255,51,0.03);
+                position: relative;
+                overflow: hidden;
+            }
+            #cheerleader-output-bar::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: repeating-linear-gradient(
+                    0deg,
+                    rgba(51,255,51,0.03) 0px,
+                    rgba(51,255,51,0.03) 1px,
+                    transparent 1px,
+                    transparent 3px
+                );
+                pointer-events: none;
+            }
+            #cheerleader-avatar {
+                height: 36px;
+                width: 36px;
+                object-fit: contain;
+                margin-right: 10px;
+                border-radius: 0;
+                border: 1px solid #33ff33;
+                filter: grayscale(1) brightness(1.5) sepia(1) hue-rotate(70deg) saturate(5);
+                background: transparent;
+            }
+            #cheerleader-avatar-emoji {
+                margin-right: 8px;
+                font-size: 1.3em;
+                filter: grayscale(1) brightness(2);
+            }
+            #cheerleader-name {
+                color: #33ff33 !important;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                font-size: 0.85em;
+            }
+            #cheerleader-output-content {
+                color: #33ff33;
+                font-family: 'Courier New', 'Consolas', monospace;
+                text-shadow: 0 0 5px rgba(51,255,51,0.5);
+                font-style: normal;
+            }
+            .cheerleader-header {
+                color: #33ff33 !important;
+                border-bottom: 1px solid rgba(51,255,51,0.3);
+                padding-bottom: 8px;
+            }
+            #close-cheerleader-bar {
+                color: #33ff33 !important;
+            }
+            .cheerleader-action-btn {
+                color: #33ff33 !important;
+                border-color: rgba(51,255,51,0.3) !important;
+            }
+            .cheerleader-action-btn:hover {
+                background: rgba(51,255,51,0.15) !important;
+            }
+        `,
+        "Pastel Bubble": `
+            #cheerleader-output-bar {
+                margin: 10px;
+                padding: 18px 20px;
+                background: linear-gradient(135deg, rgba(255,182,193,0.15) 0%, rgba(173,216,230,0.15) 50%, rgba(221,160,221,0.15) 100%);
+                border: 2px solid rgba(255,182,193,0.4);
+                border-radius: 24px;
+                box-shadow: 0 4px 15px rgba(255,182,193,0.1);
+            }
+            #cheerleader-avatar {
+                height: 44px;
+                width: 44px;
+                object-fit: contain;
+                margin-right: 12px;
+                border-radius: 50%;
+                border: 2px solid rgba(255,182,193,0.6);
+                padding: 2px;
+                background: transparent;
+            }
+            #cheerleader-avatar-emoji {
+                margin-right: 10px;
+                font-size: 1.8em;
+            }
+            #cheerleader-name {
+                color: #ff8fa3 !important;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+            }
+            #cheerleader-output-content {
+                color: var(--SmartThemeBodyColor);
+                line-height: 1.7;
+            }
+            .cheerleader-header {
+                color: #dda0dd !important;
+            }
+            #close-cheerleader-bar {
+                color: #dda0dd !important;
+            }
+            .cheerleader-action-btn {
+                border-color: rgba(255,182,193,0.4) !important;
+                color: #dda0dd !important;
+            }
+            .cheerleader-action-btn:hover {
+                background: rgba(255,182,193,0.15) !important;
+            }
+        `,
+        "Dark Elegance": `
+            #cheerleader-output-bar {
+                margin: 10px;
+                padding: 18px 22px;
+                background: linear-gradient(145deg, rgba(20,20,20,0.95) 0%, rgba(35,25,40,0.95) 100%);
+                border: 1px solid rgba(180,160,200,0.25);
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 1px rgba(180,160,200,0.3);
+            }
+            #cheerleader-avatar {
+                height: 42px;
+                width: 42px;
+                object-fit: contain;
+                margin-right: 12px;
+                border-radius: 8px;
+                border: 1px solid rgba(180,160,200,0.3);
+                background: transparent;
+            }
+            #cheerleader-avatar-emoji {
+                margin-right: 10px;
+                font-size: 1.6em;
+                opacity: 0.9;
+            }
+            #cheerleader-name {
+                color: #c4b0d4 !important;
+                font-weight: 500;
+                font-size: 0.95em;
+                letter-spacing: 1px;
+            }
+            #cheerleader-output-content {
+                color: #e0d8e8;
+                line-height: 1.7;
+                font-style: italic;
+            }
+            .cheerleader-header {
+                color: #c4b0d4 !important;
+                border-bottom: 1px solid rgba(180,160,200,0.15);
+                padding-bottom: 10px;
+            }
+            #close-cheerleader-bar {
+                color: #c4b0d4 !important;
+            }
+            .cheerleader-action-btn {
+                border-color: rgba(180,160,200,0.2) !important;
+                color: #c4b0d4 !important;
+            }
+            .cheerleader-action-btn:hover {
+                background: rgba(180,160,200,0.1) !important;
+            }
         `
     };
 
@@ -152,9 +328,12 @@
         messagesSinceLastHype: 999,
         saveTimer: null,
         autoDismissTimer: null,
-        elements: {}, // Cached jQuery elements
+        typewriterTimer: null,
+        elements: {},
         buttonObserver: null,
-        activePersonaIndex: 0
+        activePersonaIndex: 0,
+        favorites: new Set(),
+        lastHypeText: ''
     };
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -196,6 +375,208 @@
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // TYPEWRITER EFFECT
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function typewriterEffect($element, text, speed, callback) {
+        clearInterval(State.typewriterTimer);
+        $element.empty();
+        const $cursor = $('<span class="cheerleader-typewriter-cursor">|</span>');
+        const $textSpan = $('<span></span>');
+        $element.append($textSpan).append($cursor);
+
+        let i = 0;
+        State.typewriterTimer = setInterval(() => {
+            if (i < text.length) {
+                // Handle chunks of 1-3 chars for natural pacing
+                const chunk = text.substring(i, i + (text[i] === ' ' ? 2 : 1));
+                $textSpan.append(document.createTextNode(chunk));
+                i += chunk.length;
+            } else {
+                clearInterval(State.typewriterTimer);
+                $cursor.addClass('cheerleader-cursor-blink');
+                setTimeout(() => $cursor.fadeOut(400), 2000);
+                if (callback) callback();
+            }
+        }, speed);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CONFETTI ANIMATION
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function spawnConfetti(targetElement) {
+        const colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff6eb4', '#c77dff', '#00f5d4'];
+        const shapes = ['●', '■', '▲', '★', '♦', '✦'];
+        const container = $('<div class="cheerleader-confetti-container"></div>');
+        $(targetElement).append(container);
+
+        for (let i = 0; i < 24; i++) {
+            const particle = document.createElement('span');
+            particle.className = 'cheerleader-confetti-particle';
+            particle.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+            particle.style.cssText = `
+                left: ${Math.random() * 100}%;
+                color: ${colors[Math.floor(Math.random() * colors.length)]};
+                animation-delay: ${Math.random() * 0.3}s;
+                animation-duration: ${0.8 + Math.random() * 0.6}s;
+                font-size: ${8 + Math.random() * 8}px;
+            `;
+            container[0].appendChild(particle);
+        }
+
+        setTimeout(() => container.remove(), 2000);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SOUND NOTIFICATION
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function playNotificationSound() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Two-tone pleasant chime
+            const playTone = (freq, startTime, duration) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime + startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + startTime + duration);
+                osc.start(audioCtx.currentTime + startTime);
+                osc.stop(audioCtx.currentTime + startTime + duration);
+            };
+
+            playTone(880, 0, 0.15);
+            playTone(1320, 0.1, 0.2);
+        } catch (e) {
+            log('Audio playback failed:', e);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SIMPLE MARKDOWN RENDERING
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function renderSimpleMarkdown(text) {
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/_(.+?)_/g, '<em>$1</em>')
+            .replace(/~~(.+?)~~/g, '<del>$1</del>')
+            .replace(/`(.+?)`/g, '<code>$1</code>')
+            .replace(/\n/g, '<br>');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // STATISTICS TRACKING
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function updateStats(text) {
+        const settings = getSettings();
+        if (!settings.stats) {
+            settings.stats = { totalGenerated: 0, totalChars: 0, longestStreak: 0, currentStreak: 0, lastGenerated: null, favoriteCount: 0 };
+        }
+
+        settings.stats.totalGenerated++;
+        settings.stats.totalChars += (text || '').length;
+        settings.stats.currentStreak++;
+        if (settings.stats.currentStreak > settings.stats.longestStreak) {
+            settings.stats.longestStreak = settings.stats.currentStreak;
+        }
+        settings.stats.lastGenerated = Date.now();
+        saveSettings();
+        updateStatsDisplay();
+    }
+
+    function resetStreak() {
+        const settings = getSettings();
+        if (settings.stats) {
+            settings.stats.currentStreak = 0;
+        }
+    }
+
+    function updateStatsDisplay() {
+        const settings = getSettings();
+        const stats = settings.stats || {};
+        const $panel = $('#cheerleader-stats-panel');
+        if (!$panel.length) return;
+
+        $panel.html(`
+            <div class="cheerleader-stats-grid">
+                <div class="cheerleader-stat-item">
+                    <span class="cheerleader-stat-value">${stats.totalGenerated || 0}</span>
+                    <span class="cheerleader-stat-label">Total Hypes</span>
+                </div>
+                <div class="cheerleader-stat-item">
+                    <span class="cheerleader-stat-value">${stats.longestStreak || 0}</span>
+                    <span class="cheerleader-stat-label">Best Streak</span>
+                </div>
+                <div class="cheerleader-stat-item">
+                    <span class="cheerleader-stat-value">${stats.totalGenerated ? Math.round(stats.totalChars / stats.totalGenerated) : 0}</span>
+                    <span class="cheerleader-stat-label">Avg Length</span>
+                </div>
+                <div class="cheerleader-stat-item">
+                    <span class="cheerleader-stat-value">${stats.currentStreak || 0}</span>
+                    <span class="cheerleader-stat-label">Current Streak</span>
+                </div>
+            </div>
+            ${stats.lastGenerated ? `<div class="cheerleader-stat-footer">Last: ${new Date(stats.lastGenerated).toLocaleString()}</div>` : ''}
+        `);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FAVORITES MANAGEMENT
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function getFavoritesStorage() {
+        try {
+            const data = localStorage.getItem(STORAGE_KEY + '_favorites');
+            return data ? JSON.parse(data) : {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function saveFavoritesStorage(data) {
+        try {
+            localStorage.setItem(STORAGE_KEY + '_favorites', JSON.stringify(data));
+        } catch (e) {
+            error('Failed to save favorites:', e);
+        }
+    }
+
+    function toggleFavorite(chatId, index) {
+        const favs = getFavoritesStorage();
+        if (!favs[chatId]) favs[chatId] = [];
+
+        const idx = favs[chatId].indexOf(index);
+        if (idx >= 0) {
+            favs[chatId].splice(idx, 1);
+        } else {
+            favs[chatId].push(index);
+        }
+        saveFavoritesStorage(favs);
+
+        const settings = getSettings();
+        if (settings.stats) {
+            settings.stats.favoriteCount = Object.values(favs).flat().length;
+            saveSettings();
+        }
+    }
+
+    function isFavorite(chatId, index) {
+        const favs = getFavoritesStorage();
+        return (favs[chatId] || []).includes(index);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // SETTINGS MANAGEMENT
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -220,6 +601,24 @@
             autoDismissSeconds: DEFAULTS.AUTO_DISMISS,
             outputPosition: DEFAULTS.OUTPUT_POSITION,
             keyboardShortcutEnabled: DEFAULTS.KEYBOARD_SHORTCUT,
+
+            // Effects settings
+            enableTypewriter: DEFAULTS.ENABLE_TYPEWRITER,
+            typewriterSpeed: DEFAULTS.TYPEWRITER_SPEED,
+            enableSound: DEFAULTS.ENABLE_SOUND,
+            enableConfetti: DEFAULTS.ENABLE_CONFETTI,
+            enableMarkdown: DEFAULTS.ENABLE_MARKDOWN,
+            retryOnFailure: DEFAULTS.RETRY_ON_FAILURE,
+
+            // Statistics
+            stats: {
+                totalGenerated: 0,
+                totalChars: 0,
+                longestStreak: 0,
+                currentStreak: 0,
+                lastGenerated: null,
+                favoriteCount: 0
+            },
 
             // CSS settings
             useCustomCSS: false,
@@ -281,11 +680,18 @@
         if (settings.autoDismissSeconds === undefined) settings.autoDismissSeconds = DEFAULTS.AUTO_DISMISS;
         if (settings.outputPosition === undefined) settings.outputPosition = DEFAULTS.OUTPUT_POSITION;
         if (settings.keyboardShortcutEnabled === undefined) settings.keyboardShortcutEnabled = DEFAULTS.KEYBOARD_SHORTCUT;
-        if (!settings.promptTemplate) {
-            settings.promptTemplate = DEFAULTS.PROMPT_TEMPLATE;
-        }
-        if (!settings.charName) {
-            settings.charName = DEFAULTS.CHAR_NAME;
+        if (!settings.promptTemplate) settings.promptTemplate = DEFAULTS.PROMPT_TEMPLATE;
+        if (!settings.charName) settings.charName = DEFAULTS.CHAR_NAME;
+
+        // v3.0 settings migration
+        if (settings.enableTypewriter === undefined) settings.enableTypewriter = DEFAULTS.ENABLE_TYPEWRITER;
+        if (settings.typewriterSpeed === undefined) settings.typewriterSpeed = DEFAULTS.TYPEWRITER_SPEED;
+        if (settings.enableSound === undefined) settings.enableSound = DEFAULTS.ENABLE_SOUND;
+        if (settings.enableConfetti === undefined) settings.enableConfetti = DEFAULTS.ENABLE_CONFETTI;
+        if (settings.enableMarkdown === undefined) settings.enableMarkdown = DEFAULTS.ENABLE_MARKDOWN;
+        if (settings.retryOnFailure === undefined) settings.retryOnFailure = DEFAULTS.RETRY_ON_FAILURE;
+        if (!settings.stats) {
+            settings.stats = { totalGenerated: 0, totalChars: 0, longestStreak: 0, currentStreak: 0, lastGenerated: null, favoriteCount: 0 };
         }
 
         State.cache = settings;
@@ -588,18 +994,29 @@
         const persona = getActivePersona();
         let avatarUrl = persona.avatarUrl || '';
         const charName = persona.charName || 'Cheerleader';
+        State.lastHypeText = text;
 
-        // Handle Windows paths
         if (avatarUrl?.match(/^[A-Za-z]:\\/)) {
             avatarUrl = 'file:///' + avatarUrl.replace(/\\/g, '/');
         }
 
         let avatarHtml;
-
         if (avatarUrl) {
             avatarHtml = `<img id="cheerleader-avatar" src="${avatarUrl}" onerror="this.style.display='none'">`;
         } else {
             avatarHtml = `<span id="cheerleader-avatar-emoji">🎉</span>`;
+        }
+
+        const position = settings.outputPosition || 'after_chat';
+
+        // Toast mode: lightweight notification
+        if (position === 'toast') {
+            showToastHype(text, charName, avatarHtml);
+            addToChatHistory(text);
+            State.messagesSinceLastHype = 0;
+            updateStats(text);
+            if (settings.enableSound) playNotificationSound();
+            return;
         }
 
         let $bar = $('#cheerleader-output-bar');
@@ -608,13 +1025,15 @@
             $bar = $('<div id="cheerleader-output-bar">').css('display', 'none').html(`
                 <div class="cheerleader-header">
                     <span id="cheerleader-header">${avatarHtml}<span id="cheerleader-name">${charName}</span></span>
-                    <span id="close-cheerleader-bar" title="Close (Esc)">✕</span>
+                    <div class="cheerleader-header-actions">
+                        <span class="cheerleader-action-btn" id="cheerleader-copy-btn" title="Copy to clipboard"><i class="fa-solid fa-copy"></i></span>
+                        <span class="cheerleader-action-btn" id="cheerleader-regen-btn" title="Regenerate"><i class="fa-solid fa-rotate"></i></span>
+                        <span id="close-cheerleader-bar" title="Close (Esc)">✕</span>
+                    </div>
                 </div>
                 <div id="cheerleader-output-content"></div>
             `);
 
-            // Position based on settings
-            const position = settings.outputPosition || 'after_chat';
             switch (position) {
                 case 'before_chat':
                     $('#chat').length ? $('#chat').before($bar) : $('body').append($bar);
@@ -640,22 +1059,89 @@
             }
 
             $bar.on('click', '#close-cheerleader-bar', () => $bar.slideUp());
+            $bar.on('click', '#cheerleader-copy-btn', () => {
+                navigator.clipboard.writeText(State.lastHypeText).then(() => {
+                    toastr.success('Copied to clipboard!');
+                }).catch(() => {
+                    toastr.error('Failed to copy');
+                });
+            });
+            $bar.on('click', '#cheerleader-regen-btn', () => generateHype());
         } else {
             $('#cheerleader-header').html(`${avatarHtml}<span id="cheerleader-name">${charName}</span>`);
         }
 
-        $('#cheerleader-output-content').text(text);
-        $bar.slideDown(200);
+        const $content = $('#cheerleader-output-content');
+
+        if (settings.enableTypewriter) {
+            $content.empty();
+            $bar.slideDown(200, () => {
+                typewriterEffect($content, text, settings.typewriterSpeed || 30);
+            });
+        } else if (settings.enableMarkdown) {
+            $content.html(renderSimpleMarkdown(text));
+            $bar.slideDown(200);
+        } else {
+            $content.text(text);
+            $bar.slideDown(200);
+        }
+
+        // Confetti celebration
+        if (settings.enableConfetti) {
+            setTimeout(() => spawnConfetti($bar[0]), 100);
+        }
+
+        // Sound notification
+        if (settings.enableSound) {
+            playNotificationSound();
+        }
 
         addToChatHistory(text);
         State.messagesSinceLastHype = 0;
+        updateStats(text);
 
-        // Auto-dismiss if enabled
+        // Auto-dismiss
         clearTimeout(State.autoDismissTimer);
         if (settings.autoDismissSeconds > 0) {
             State.autoDismissTimer = setTimeout(() => {
                 $bar.slideUp(200);
             }, settings.autoDismissSeconds * 1000);
+        }
+    }
+
+    function showToastHype(text, charName, avatarHtml) {
+        const settings = getSettings();
+        const $toast = $(`
+            <div class="cheerleader-toast">
+                <div class="cheerleader-toast-header">
+                    ${avatarHtml}<span class="cheerleader-toast-name">${charName}</span>
+                    <span class="cheerleader-toast-close">✕</span>
+                </div>
+                <div class="cheerleader-toast-content">${settings.enableMarkdown ? renderSimpleMarkdown(text) : $('<span>').text(text).html()}</div>
+            </div>
+        `);
+
+        $toast.find('.cheerleader-toast-close').on('click', () => {
+            $toast.addClass('cheerleader-toast-exit');
+            setTimeout(() => $toast.remove(), 300);
+        });
+
+        // Stack toasts
+        $('.cheerleader-toast').each(function (i) {
+            $(this).css('transform', `translateY(-${(i + 1) * 10}px) scale(${1 - (i + 1) * 0.02})`);
+        });
+
+        $('body').append($toast);
+
+        // Auto-dismiss
+        const dismissTime = (settings.autoDismissSeconds || 8) * 1000;
+        setTimeout(() => {
+            $toast.addClass('cheerleader-toast-exit');
+            setTimeout(() => $toast.remove(), 300);
+        }, dismissTime);
+
+        if (settings.enableConfetti) {
+            spawnConfetti($toast[0]);
         }
     }
 
@@ -886,8 +1372,8 @@
         return { messages, prefillText };
     }
 
-    async function generateHype() {
-        if (State.isGenerating) {
+    async function generateHype(retryCount = 0) {
+        if (State.isGenerating && retryCount === 0) {
             toastr.warning('Already generating...');
             return;
         }
@@ -896,25 +1382,20 @@
         const settings = getSettings();
         const persona = getActivePersona();
 
-        // Set loading state
         State.isGenerating = true;
         updateButtonState(true);
-        toastr.info("Generating Hype...");
+        if (retryCount === 0) toastr.info("Generating Hype...");
 
         try {
             if (!persona.profileId) {
                 throw new Error("No Connection Profile selected. Open Settings → Cheerleader.");
             }
 
-            // Gather template data
             const data = gatherTemplateData();
             const maxCtx = parseInt(persona.maxContextTokens) || DEFAULTS.MAX_CONTEXT;
-            
-            // Build messages from template
             const template = persona.promptTemplate || DEFAULTS.PROMPT_TEMPLATE;
             const { messages, prefillText } = buildMessagesFromTemplate(template, data, maxCtx);
 
-            // Send request
             const svc = ctx.ConnectionManagerRequestService;
             if (!svc?.sendRequest) throw new Error("Connection Service not available.");
 
@@ -932,7 +1413,6 @@
 
             if (!text) throw new Error("Empty response content.");
 
-            // Strip prefill from response
             if (prefillText && text.startsWith(prefillText)) {
                 text = text.substring(prefillText.length).trim();
             }
@@ -941,8 +1421,19 @@
             toastr.success("Hype generated!");
 
         } catch (e) {
+            // Retry logic
+            const maxRetries = settings.retryOnFailure ? (DEFAULTS.MAX_RETRIES || 1) : 0;
+            if (retryCount < maxRetries) {
+                warn(`Generation failed, retrying (${retryCount + 1}/${maxRetries})...`);
+                toastr.warning(`Retrying... (${retryCount + 1}/${maxRetries})`);
+                State.isGenerating = false;
+                await new Promise(r => setTimeout(r, 1500));
+                return generateHype(retryCount + 1);
+            }
+
             error("Generation failed:", e);
             toastr.error(`Error: ${e.message}`);
+            resetStreak();
         } finally {
             State.isGenerating = false;
             updateButtonState(false);
@@ -1000,15 +1491,26 @@
         updateHistoryCount();
         updateCooldownIndicator();
 
+        // Effects
+        $('#cheerleader-typewriter').prop('checked', s.enableTypewriter !== false);
+        $('#cheerleader-typewriter-speed').val(s.typewriterSpeed || 30);
+        $('#cheerleader-confetti').prop('checked', s.enableConfetti !== false);
+        $('#cheerleader-sound').prop('checked', s.enableSound || false);
+        $('#cheerleader-markdown').prop('checked', s.enableMarkdown !== false);
+        $('#cheerleader-retry').prop('checked', s.retryOnFailure !== false);
+
         // CSS
         updateCSSDropdown();
         applyCSSPreset();
 
         // Presets
         updatePresetDropdown();
-        
+
         // Prompt template
         $('#cheerleader-prompt-template').val(s.promptTemplate || DEFAULTS.PROMPT_TEMPLATE);
+
+        // Statistics
+        updateStatsDisplay();
     }
 
     function updatePresetDropdown() {
@@ -1524,6 +2026,51 @@
             }
         });
 
+        // Effects & Animations
+        $doc.on('change', '#cheerleader-typewriter', function () {
+            getSettings().enableTypewriter = this.checked;
+            saveSettings();
+        });
+
+        $doc.on('input', '#cheerleader-typewriter-speed', function () {
+            getSettings().typewriterSpeed = Math.max(5, Math.min(200, parseInt(this.value) || 30));
+            debouncedSave();
+        });
+
+        $doc.on('change', '#cheerleader-confetti', function () {
+            getSettings().enableConfetti = this.checked;
+            saveSettings();
+        });
+
+        $doc.on('change', '#cheerleader-sound', function () {
+            getSettings().enableSound = this.checked;
+            saveSettings();
+        });
+
+        $doc.on('click', '#cheerleader-test-sound', () => {
+            playNotificationSound();
+        });
+
+        $doc.on('change', '#cheerleader-markdown', function () {
+            getSettings().enableMarkdown = this.checked;
+            saveSettings();
+        });
+
+        $doc.on('change', '#cheerleader-retry', function () {
+            getSettings().retryOnFailure = this.checked;
+            saveSettings();
+        });
+
+        // Statistics
+        $doc.on('click', '#cheerleader-reset-stats', () => {
+            if (!confirm('Reset all statistics?')) return;
+            const s = getSettings();
+            s.stats = { totalGenerated: 0, totalChars: 0, longestStreak: 0, currentStreak: 0, lastGenerated: null, favoriteCount: 0 };
+            saveSettings();
+            updateStatsDisplay();
+            toastr.success('Statistics reset!');
+        });
+
         // Hype button
         $doc.on('click', '#cheerleader-hype-btn', (e) => {
             e.preventDefault();
@@ -1538,15 +2085,32 @@
             return;
         }
 
-        const html = history.map((entry, i) => {
-            const msg = typeof entry === 'string' ? entry : entry.text;
-            const persona = entry.persona || 'Cheerleader';
-            const time = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : '';
-            return `<div class="cheerleader-history-item">
-                <div class="cheerleader-history-meta"><b>${i + 1}.</b> <span class="cheerleader-history-persona">${persona}</span> ${time ? `<span class="cheerleader-history-time">${time}</span>` : ''}</div>
-                <div class="cheerleader-history-text">${msg}</div>
-            </div>`;
-        }).join('');
+        const chatId = getChatId();
+
+        function renderHistoryItems(filter, favOnly) {
+            return history.map((entry, i) => {
+                const msg = typeof entry === 'string' ? entry : entry.text;
+                const persona = entry.persona || 'Cheerleader';
+                const time = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : '';
+                const fav = isFavorite(chatId, i);
+
+                if (favOnly && !fav) return '';
+                if (filter && !msg.toLowerCase().includes(filter.toLowerCase()) && !persona.toLowerCase().includes(filter.toLowerCase())) return '';
+
+                return `<div class="cheerleader-history-item ${fav ? 'cheerleader-history-fav' : ''}" data-index="${i}">
+                    <div class="cheerleader-history-meta">
+                        <b>${i + 1}.</b>
+                        <span class="cheerleader-history-persona">${persona}</span>
+                        ${time ? `<span class="cheerleader-history-time">${time}</span>` : ''}
+                        <span class="cheerleader-history-actions">
+                            <span class="cheerleader-hist-action cheerleader-hist-fav" data-index="${i}" title="${fav ? 'Unfavorite' : 'Favorite'}">${fav ? '★' : '☆'}</span>
+                            <span class="cheerleader-hist-action cheerleader-hist-copy" data-index="${i}" title="Copy"><i class="fa-solid fa-copy"></i></span>
+                        </span>
+                    </div>
+                    <div class="cheerleader-history-text">${msg}</div>
+                </div>`;
+            }).join('');
+        }
 
         $('body').append(`
             <div id="cheerleader-history-overlay"></div>
@@ -1555,11 +2119,63 @@
                     <h3>🎉 Hype History (${history.length})</h3>
                     <span id="close-history-popup">✕</span>
                 </div>
-                <div class="cheerleader-history-list">${html}</div>
+                <div class="cheerleader-history-toolbar">
+                    <input type="text" id="cheerleader-history-search" class="text_pole" placeholder="Search hypes..." style="flex:1">
+                    <button id="cheerleader-history-fav-filter" class="menu_button" title="Show favorites only">☆</button>
+                    <button id="cheerleader-history-export" class="menu_button" title="Export history"><i class="fa-solid fa-download"></i></button>
+                </div>
+                <div class="cheerleader-history-list">${renderHistoryItems('', false)}</div>
             </div>
         `);
 
-        $(document).one('click', '#close-history-popup, #cheerleader-history-overlay', () => {
+        let favFilterOn = false;
+
+        $('#cheerleader-history-search').on('input', function () {
+            const val = this.value;
+            $('.cheerleader-history-list').html(renderHistoryItems(val, favFilterOn));
+        });
+
+        $(document).on('click.cheerleaderHist', '#cheerleader-history-fav-filter', function () {
+            favFilterOn = !favFilterOn;
+            $(this).text(favFilterOn ? '★' : '☆').toggleClass('active', favFilterOn);
+            const searchVal = $('#cheerleader-history-search').val() || '';
+            $('.cheerleader-history-list').html(renderHistoryItems(searchVal, favFilterOn));
+        });
+
+        $(document).on('click.cheerleaderHist', '.cheerleader-hist-fav', function () {
+            const idx = parseInt($(this).data('index'));
+            toggleFavorite(chatId, idx);
+            const searchVal = $('#cheerleader-history-search').val() || '';
+            $('.cheerleader-history-list').html(renderHistoryItems(searchVal, favFilterOn));
+        });
+
+        $(document).on('click.cheerleaderHist', '.cheerleader-hist-copy', function () {
+            const idx = parseInt($(this).data('index'));
+            const entry = history[idx];
+            const msg = typeof entry === 'string' ? entry : entry.text;
+            navigator.clipboard.writeText(msg).then(() => toastr.success('Copied!')).catch(() => toastr.error('Copy failed'));
+        });
+
+        $(document).on('click.cheerleaderHist', '#cheerleader-history-export', () => {
+            const exportData = history.map((entry, i) => ({
+                index: i + 1,
+                text: typeof entry === 'string' ? entry : entry.text,
+                persona: entry.persona || 'Cheerleader',
+                timestamp: entry.timestamp ? new Date(entry.timestamp).toISOString() : null,
+                favorite: isFavorite(chatId, i)
+            }));
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `hype-history-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toastr.success('History exported!');
+        });
+
+        $(document).on('click.cheerleaderHist', '#close-history-popup, #cheerleader-history-overlay', () => {
+            $(document).off('.cheerleaderHist');
             $('#cheerleader-history-popup, #cheerleader-history-overlay').remove();
         });
     }
@@ -1803,7 +2419,8 @@
                                     <select id="cheerleader-output-position" class="text_pole">
                                         <option value="after_chat">After Chat (Bottom)</option>
                                         <option value="before_chat">Before Chat (Top)</option>
-                                        <option value="floating">Floating (Bottom Right)</option>
+                                        <option value="floating">Floating (Draggable)</option>
+                                        <option value="toast">Toast Notification</option>
                                     </select>
                                 </div>
 
@@ -1818,6 +2435,86 @@
                                         Enable Keyboard Shortcut (Ctrl+Shift+H)
                                     </label>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Effects & Animations Drawer -->
+                    <div class="cheerleader-drawer">
+                        <div class="inline-drawer">
+                            <div class="inline-drawer-toggle inline-drawer-header">
+                                <b>Effects & Animations</b>
+                                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+                            </div>
+                            <div class="inline-drawer-content">
+                                <div class="cheerleader-section">
+                                    <label class="checkbox_label">
+                                        <input type="checkbox" id="cheerleader-typewriter">
+                                        Typewriter Effect
+                                    </label>
+                                    <div class="cheerleader-section" id="cheerleader-typewriter-speed-section">
+                                        <label>Typewriter Speed (ms per char)</label>
+                                        <input id="cheerleader-typewriter-speed" class="text_pole" type="number" min="5" max="200" value="30">
+                                    </div>
+                                </div>
+                                <div class="cheerleader-section">
+                                    <label class="checkbox_label">
+                                        <input type="checkbox" id="cheerleader-confetti">
+                                        Confetti Celebration
+                                    </label>
+                                </div>
+                                <div class="cheerleader-section">
+                                    <label class="checkbox_label">
+                                        <input type="checkbox" id="cheerleader-sound">
+                                        Sound Notification
+                                    </label>
+                                    <button id="cheerleader-test-sound" class="menu_button" style="margin-top:5px"><i class="fa-solid fa-volume-high"></i> Test Sound</button>
+                                </div>
+                                <div class="cheerleader-section">
+                                    <label class="checkbox_label">
+                                        <input type="checkbox" id="cheerleader-markdown">
+                                        Render Markdown in Output
+                                    </label>
+                                </div>
+                                <div class="cheerleader-section">
+                                    <label class="checkbox_label">
+                                        <input type="checkbox" id="cheerleader-retry">
+                                        Auto-Retry on Failure
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Dashboard -->
+                    <div class="cheerleader-drawer">
+                        <div class="inline-drawer">
+                            <div class="inline-drawer-toggle inline-drawer-header">
+                                <b>Statistics</b>
+                                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+                            </div>
+                            <div class="inline-drawer-content">
+                                <div id="cheerleader-stats-panel" class="cheerleader-section">
+                                    <div class="cheerleader-stats-grid">
+                                        <div class="cheerleader-stat-item">
+                                            <span class="cheerleader-stat-value">0</span>
+                                            <span class="cheerleader-stat-label">Total Hypes</span>
+                                        </div>
+                                        <div class="cheerleader-stat-item">
+                                            <span class="cheerleader-stat-value">0</span>
+                                            <span class="cheerleader-stat-label">Best Streak</span>
+                                        </div>
+                                        <div class="cheerleader-stat-item">
+                                            <span class="cheerleader-stat-value">0</span>
+                                            <span class="cheerleader-stat-label">Avg Length</span>
+                                        </div>
+                                        <div class="cheerleader-stat-item">
+                                            <span class="cheerleader-stat-value">0</span>
+                                            <span class="cheerleader-stat-label">Current Streak</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="cheerleader-reset-stats" class="menu_button cheerleader-full-width cheerleader-danger">Reset Statistics</button>
                             </div>
                         </div>
                     </div>
@@ -1943,18 +2640,25 @@
         #cheerleader-history-popup {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: var(--SmartThemeBodyColor); border: 2px solid var(--SmartThemeBorderColor);
-            border-radius: 10px; padding: 20px; max-width: 500px; max-height: 70vh; z-index: 9999;
+            border-radius: 10px; padding: 20px; width: 90%; max-width: 560px; max-height: 70vh; z-index: 9999;
         }
         .cheerleader-popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .cheerleader-popup-header h3 { margin: 0; color: gold; }
         #close-history-popup { cursor: pointer; font-size: 1.5em; opacity: 0.7; transition: opacity 0.2s; }
         #close-history-popup:hover { opacity: 1; }
         .cheerleader-history-list { max-height: 50vh; overflow-y: auto; }
-        .cheerleader-history-item { padding: 10px; margin-bottom: 8px; background: var(--SmartThemeBlurTintColor); border-radius: 6px; }
+        .cheerleader-history-item { padding: 10px; margin-bottom: 8px; background: var(--SmartThemeBlurTintColor); border-radius: 6px; border-left: 3px solid transparent; }
         .cheerleader-history-meta { font-size: 0.85em; color: var(--SmartThemeQuoteColor); margin-bottom: 4px; display: flex; gap: 8px; align-items: center; }
         .cheerleader-history-persona { color: gold; font-weight: bold; }
         .cheerleader-history-time { font-size: 0.8em; opacity: 0.7; }
         .cheerleader-history-text { font-style: italic; }
+        .cheerleader-history-fav { border-left-color: gold !important; }
+        .cheerleader-history-toolbar { display: flex; gap: 6px; margin-bottom: 12px; align-items: center; }
+        .cheerleader-history-toolbar .menu_button.active { color: gold !important; background: rgba(255,215,0,0.15); }
+        .cheerleader-history-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+        .cheerleader-hist-action { cursor: pointer; opacity: 0.5; transition: opacity 0.2s, transform 0.15s; padding: 2px 4px; font-size: 0.9em; }
+        .cheerleader-hist-action:hover { opacity: 1; transform: scale(1.15); }
+        .cheerleader-hist-fav { color: gold; }
 
         /* Prompt Editor Popup */
         #cheerleader-prompt-editor-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; }
@@ -2034,6 +2738,35 @@
     `;
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // SLASH COMMAND
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function registerSlashCommand() {
+        try {
+            const ctx = getContext();
+            if (ctx.registerSlashCommand) {
+                ctx.registerSlashCommand('hype', (args) => {
+                    generateHype();
+                    return '';
+                }, [], '<span class="monospace">/hype</span> – generate a cheerleader hype message', true, true);
+                log('Slash command /hype registered');
+            } else if (typeof SlashCommandParser !== 'undefined') {
+                SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+                    name: 'hype',
+                    callback: async () => {
+                        await generateHype();
+                        return '';
+                    },
+                    helpString: 'Generate a Cheerleader hype message',
+                }));
+                log('Slash command /hype registered via parser');
+            }
+        } catch (e) {
+            log('Slash command registration not available:', e.message);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // INITIALIZATION
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -2049,14 +2782,22 @@
         updateUI();
         setupKeyboardShortcuts();
 
-        // Delay profile dropdown init slightly to ensure ST is ready
         setTimeout(initProfileDropdown, 500);
 
         addHypeButton();
         setupButtonObserver();
         setupAutoHype();
+        registerSlashCommand();
 
-        log('Initialized v2.0.0');
+        // Initialize stats display
+        setTimeout(updateStatsDisplay, 600);
+
+        // Load favorites into State
+        const favs = getFavoritesStorage();
+        const chatId = getChatId();
+        (favs[chatId] || []).forEach(i => State.favorites.add(i));
+
+        log('Initialized v3.0.0');
     }
 
     // Wait for jQuery
