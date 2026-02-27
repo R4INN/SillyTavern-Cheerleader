@@ -1,4 +1,4 @@
-/* Cheerleader Hype Bot v2.0.0 - Enhanced Styles */
+/* Cheerleader Hype Bot v3.0.0 - Enhanced Styles */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SETTINGS PANEL
@@ -29,13 +29,15 @@
 
 #cheerleader-hype-btn {
     opacity: 0.85;
-    transition: opacity 0.2s, transform 0.15s;
+    transition: opacity 0.2s, transform 0.15s, filter 0.2s;
     user-select: none;
+    position: relative;
 }
 
 #cheerleader-hype-btn:hover {
     opacity: 1;
-    transform: scale(1.1);
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.4));
 }
 
 #cheerleader-hype-btn:active {
@@ -64,6 +66,7 @@
 
 #cheerleader-output-bar {
     animation: cheerleader-fadeIn 0.3s ease-out;
+    transition: border-color 0.3s ease;
 }
 
 @keyframes cheerleader-fadeIn {
@@ -89,6 +92,8 @@
 #cheerleader-header {
     display: flex;
     align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
 }
 
 #close-cheerleader-bar {
@@ -106,19 +111,190 @@
 
 #cheerleader-output-content {
     font-style: italic;
-    line-height: 1.5;
+    line-height: 1.6;
+    min-height: 1.2em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPEWRITER EFFECT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-typewriter-text {
+    display: inline;
+}
+
+.cheerleader-typewriter-cursor {
+    display: inline;
+    font-weight: bold;
+    animation: cheerleader-blink 0.7s step-end infinite;
+    margin-left: 1px;
+    color: gold;
+    font-style: normal;
+}
+
+.cheerleader-cursor-fade {
+    animation: cheerleader-cursor-fadeout 1.5s ease-out forwards;
+}
+
+@keyframes cheerleader-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+@keyframes cheerleader-cursor-fadeout {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOOD BADGES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-mood-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.72em;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    animation: cheerleader-badge-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    white-space: nowrap;
+}
+
+.cheerleader-mood-badge-sm {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 5px;
+    border-radius: 8px;
+    font-size: 0.7em;
+    color: #fff;
+}
+
+@keyframes cheerleader-badge-pop {
+    0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+    60% { transform: scale(1.15) rotate(2deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STREAK BADGES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-streak-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.68em;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    animation: cheerleader-badge-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    white-space: nowrap;
+}
+
+.cheerleader-streak-combo {
+    background: linear-gradient(135deg, #f39c12, #e74c3c);
+    color: #fff;
+}
+
+.cheerleader-streak-unstoppable {
+    background: linear-gradient(135deg, #e74c3c, #9b59b6);
+    color: #fff;
+}
+
+.cheerleader-streak-on-fire {
+    background: linear-gradient(135deg, #ff0000, #ff6600);
+    color: #fff;
+    text-shadow: 0 0 5px rgba(255, 100, 0, 0.5);
+}
+
+.cheerleader-streak-legendary {
+    background: linear-gradient(135deg, #ffd700, #ff0080, #00c8ff);
+    background-size: 200% 200%;
+    color: #fff;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+    animation: cheerleader-badge-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+               cheerleader-legendary-shimmer 3s ease infinite;
+}
+
+@keyframes cheerleader-legendary-shimmer {
+    0% { background-position: 0% 50%; box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
+    50% { background-position: 100% 50%; box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
+    100% { background-position: 0% 50%; box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   QUICK REACTIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-reactions {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    flex-wrap: wrap;
+}
+
+.cheerleader-reaction-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 3px 10px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.15s ease;
+    position: relative;
+    overflow: visible;
+    line-height: 1.4;
+}
+
+.cheerleader-reaction-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: scale(1.2);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.cheerleader-reaction-btn:active {
+    transform: scale(0.9);
+}
+
+.cheerleader-reaction-active {
+    background: rgba(255, 215, 0, 0.15) !important;
+    border-color: rgba(255, 215, 0, 0.35) !important;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.15);
+}
+
+.cheerleader-reaction-ripple {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.1em;
+    animation: cheerleader-reaction-float 0.6s ease-out forwards;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@keyframes cheerleader-reaction-float {
+    0% { top: -5px; opacity: 1; }
+    100% { top: -30px; opacity: 0; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    HISTORY POPUP
    ═══════════════════════════════════════════════════════════════════════════ */
 
-#cheerleader-history-overlay {
+.cheerleader-overlay {
     animation: cheerleader-fadeIn 0.2s ease-out;
 }
 
-#cheerleader-history-popup {
-    animation: cheerleader-popIn 0.3s ease-out;
+.cheerleader-popup {
+    animation: cheerleader-popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes cheerleader-popIn {
@@ -151,11 +327,147 @@
 }
 
 .cheerleader-history-item {
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, transform 0.15s;
 }
 
 .cheerleader-history-item:hover {
     background-color: var(--SmartThemeEmColor);
+    transform: translateX(3px);
+}
+
+.cheerleader-history-reactions {
+    margin-top: 4px;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.cheerleader-history-reaction {
+    font-size: 0.8em;
+    padding: 1px 5px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STATISTICS POPUP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.cheerleader-stat-card {
+    background: var(--SmartThemeBlurTintColor);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid var(--SmartThemeBorderColor);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cheerleader-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.cheerleader-stat-number {
+    font-size: 2em;
+    font-weight: 700;
+    color: gold;
+    line-height: 1.2;
+}
+
+.cheerleader-stat-label {
+    font-size: 0.78em;
+    color: var(--SmartThemeQuoteColor);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 4px;
+}
+
+.cheerleader-stats-section {
+    margin-bottom: 16px;
+}
+
+.cheerleader-stats-section h4 {
+    margin: 0 0 10px;
+    color: var(--SmartThemeQuoteColor);
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--SmartThemeBorderColor);
+}
+
+.cheerleader-stat-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.cheerleader-stat-bar-label {
+    width: 90px;
+    font-size: 0.85em;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.cheerleader-stat-bar-track {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.cheerleader-stat-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    min-width: 2px;
+}
+
+.cheerleader-stat-bar-value {
+    font-size: 0.78em;
+    color: var(--SmartThemeQuoteColor);
+    min-width: 65px;
+    text-align: right;
+}
+
+.cheerleader-stat-reactions-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.cheerleader-stat-reaction {
+    padding: 4px 12px;
+    background: var(--SmartThemeBlurTintColor);
+    border-radius: 14px;
+    font-size: 0.9em;
+    border: 1px solid var(--SmartThemeBorderColor);
+    transition: transform 0.15s;
+}
+
+.cheerleader-stat-reaction:hover {
+    transform: scale(1.05);
+}
+
+.cheerleader-stats-meta {
+    font-size: 0.85em;
+    color: var(--SmartThemeQuoteColor);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px;
+    background: var(--SmartThemeBlurTintColor);
+    border-radius: 8px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -175,11 +487,12 @@
     border: 1px solid var(--SmartThemeBorderColor);
     border-radius: 50%;
     font-weight: bold;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, transform 0.15s;
 }
 
 .cheerleader-tooltip:hover {
     background-color: var(--SmartThemeBlurTintColor);
+    transform: scale(1.1);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -219,6 +532,7 @@
 
 #cheerleader-settings .inline-drawer-header {
     transition: background-color 0.2s;
+    border-radius: 4px;
 }
 
 #cheerleader-settings .inline-drawer-header:hover {
@@ -236,13 +550,14 @@
     border-radius: 4px;
     display: none;
     border: 1px solid var(--SmartThemeBorderColor);
-    transition: transform 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
     background: transparent;
 }
 
 .cheerleader-avatar-preview:hover {
     transform: scale(1.5);
     z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -266,16 +581,161 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   INDENT HELPER
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-indent {
+    margin-left: 24px;
+    padding-left: 10px;
+    border-left: 2px solid var(--SmartThemeBorderColor);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-toast {
+    animation: cheerleader-toast-enter 0.3s ease-out;
+}
+
+.cheerleader-toast-exit {
+    animation: cheerleader-toast-leave 0.3s ease-in forwards;
+}
+
+@keyframes cheerleader-toast-enter {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes cheerleader-toast-leave {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HEADER ACTIONS (COPY / REGEN)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cheerleader-action-btn {
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.2s, transform 0.15s;
+    padding: 2px 4px;
+    font-size: 0.85em;
+}
+
+.cheerleader-action-btn:hover {
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HISTORY TOOLBAR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cheerleader-history-toolbar {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--SmartThemeBorderColor);
+}
+
+.cheerleader-history-star {
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: transform 0.15s, color 0.2s;
+    margin-left: auto;
+}
+
+.cheerleader-history-star:hover {
+    transform: scale(1.3);
+    color: gold;
+}
+
+.cheerleader-history-fav {
+    border-left: 3px solid gold;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MARKDOWN IN OUTPUT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#cheerleader-output-content strong {
+    font-weight: 700;
+}
+
+#cheerleader-output-content del {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+#cheerleader-output-content code {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.9em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONFETTI CANVAS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#cheerleader-confetti {
+    pointer-events: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 99999;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    RESPONSIVE ADJUSTMENTS
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-    #cheerleader-history-popup {
-        max-width: 90vw;
+    .cheerleader-popup {
+        max-width: 95vw;
         padding: 15px;
+    }
+
+    .cheerleader-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .cheerleader-stat-card {
+        padding: 12px;
+    }
+
+    .cheerleader-stat-number {
+        font-size: 1.5em;
     }
 
     .cheerleader-row {
         flex-wrap: wrap;
+    }
+
+    .cheerleader-reactions {
+        gap: 3px;
+    }
+
+    .cheerleader-reaction-btn {
+        padding: 2px 8px;
+        font-size: 0.85em;
+    }
+}
+
+@media (max-width: 480px) {
+    .cheerleader-stats-grid {
+        grid-template-columns: 1fr;
     }
 }
